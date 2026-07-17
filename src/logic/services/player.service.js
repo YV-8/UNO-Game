@@ -1,4 +1,4 @@
-import * as PlayerRepository from '../../dataAccess/repositories/player.repository.js';
+import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
 import { appError } from '../../middlewares/appError.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,7 +40,7 @@ export const createPlayer = async ({ name, age, email }) => {
 };
 
 export const updatePlayer = async (id, data) => {
-  const player = await Player.getPlayerById(id);
+  const player = await PlayerRepository.getPlayerById(id);
   if (!player) {
     throw new appError('Player not found', 404);
   }
@@ -72,14 +72,9 @@ export const updatePlayer = async (id, data) => {
 };
 
 export const deletePlayer = async (id) => {
-  if (!id) {
-    throw new appError('ID is required', 400);
-  }
+  if (!id) throw new appError('ID is required', 400);
 
-  const deleted = await PlayerRepository.destroy(id);
-  if (!deleted) {
-    throw new appError('Player not found', 404);
-  }
-  
-  return { };
+  const deleted = await PlayerRepository.delete(id);
+  if (!deleted) throw new appError('Player not found', 404);
+  return {};
 };
