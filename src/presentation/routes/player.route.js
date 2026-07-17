@@ -1,5 +1,5 @@
 import { Rotuer, Router } from "express";
-import { getPlayer, getPlayerById, createPlayer, updatePlayer, deletePlayer, patchPlayer} from "../Controllers/player.controller";
+import { getPlayer, getPlayerById, createPlayer, updatePlayer, deletePlayer, patchPlayer} from "../controllers/players.controller";
 
 const router = Router();
 router.get("/", getPlayer);

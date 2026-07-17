@@ -37,3 +37,4 @@ out/
 # Archivos del sistema operativo
 .DS_Store
 Thumbs.db
+docker-compose.yml

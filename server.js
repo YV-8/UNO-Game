@@ -1,5 +1,5 @@
 import app from './src/app.js';
-import dataBase from './src/DataAccess/DataBase/database.js';
+import dataBase from './src/dataAccess/dataBase/database.js';
 
 const PORT = 3002;
 dataBase.authenticate()

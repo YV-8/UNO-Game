@@ -1,6 +1,6 @@
 import express from 'express';
-import playerRoute from './Presentation/Routes/playerRoute.js'
-import {errorHandler} from './Middlewares/errorHandler.middleware.js'
+import playerRoute from './presentation/routes/players.route.js'
+import {errorHandler} from './middlewares/errorHandler.middleware.js'
 
 const app = express();
 
