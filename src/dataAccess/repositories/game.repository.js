@@ -1,5 +1,4 @@
-import Game from '../models/game.model.js';
-import './dataAccess/models/index.js';
+import {Game} from '../models/index.js';
 
 class GameRepository {
   async findAll() {

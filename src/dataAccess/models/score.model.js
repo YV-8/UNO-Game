@@ -1,4 +1,3 @@
-import { Score } from '../index.js';
 const scoreModel = (sequelize, DataTypes) => {
     const Score = sequelize.define(
         'Score',

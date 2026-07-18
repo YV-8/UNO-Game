@@ -1,5 +1,4 @@
-import Score from '../models/score.model.js';
-import './dataAccess/models/index.js';
+import {Score} from '../models/index.js';
 
 class ScoreRepository {
     async findAll() {

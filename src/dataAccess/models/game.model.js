@@ -1,4 +1,3 @@
-import { Score } from '../Models/index.js';
 const gameModel = (sequelize, DataTypes) => {
   const Game = sequelize.define(
     'Game',
@@ -13,7 +12,7 @@ const gameModel = (sequelize, DataTypes) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM(('active', 'waiting', 'inactive', 'finished'),),
+        type: DataTypes.ENUM('active', 'waiting', 'inactive', 'finished'),
         allowNull: false,
         defaultValue: 'waiting',
       },

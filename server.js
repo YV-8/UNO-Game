@@ -1,12 +1,15 @@
 import app from './src/app.js';
-import dataBase from './src/dataAccess/dataBase/database.js';
+import dataBase from './src/dataAccess/database.js';
+import './src/dataAccess/models/index.js';
 
-const PORT = 3002;
+const PORT = 3000;
 dataBase.authenticate()
-  .then(() => {
+  .then(async () => {
     console.log('Database connection has been established successfully.');
     
-    // 2. Levantar el servidor SOLO si la base de datos conectó con éxito
+    await dataBase.sync({ alter: true });
+    console.log('Database models synchronized and tables created successfully.');
+
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
