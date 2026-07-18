@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { scoreController} from "../controllers/score.controller";
+import * as scoreController from "../controllers/score.controller.js";
 
-const route = route();
-route.get("/", scoreController.getScore);
+const route = Router();
+route.get("/", scoreController.getAllScore);
 route.get("/:id", scoreController.getScoreById);
 route.post("/", scoreController.createScore);
 route.put("/:id", scoreController.updateScore);

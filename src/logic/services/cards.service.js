@@ -1,4 +1,4 @@
-import CardRepository from '../../dataAccess/repositories/card.repository.js';
+import CardRepository from '../../dataAccess/repositories/cards.repository.js';
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
 import { appError } from '../../middlewares/appError.js';
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];

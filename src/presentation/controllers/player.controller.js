@@ -1,5 +1,5 @@
-import * as PlayerService from '../../logic / services/player.service.js';
-import { sendSuccess } from '../../utils/responseHandler.js';
+import * as PlayerService from '../../logic/services/player.service.js';
+import { sendSuccess } from '../../helpers/responseHandler.middleware.js';
 
 export const getAllPlayer = async (req, res, next) => {
   try {

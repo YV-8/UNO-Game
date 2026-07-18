@@ -1,7 +1,7 @@
 import * as ScoreService from '../../logic/services/score.service.js';
-import { sendSuccess } from '../../utils/responseHandler.js';
+import { sendSuccess } from '../../helpers/responseHandler.middleware.js';
 
-export const getAllScores = async (req, res, next) => {
+export const getAllScore = async (req, res, next) => {
     try {
         const scores = await ScoreService.getAllScores();
         return sendSuccess(res, 200, 'Scores retrieved successfully', scores);

@@ -40,7 +40,7 @@ export const createPlayer = async ({ name, age, email }) => {
 };
 
 export const updatePlayer = async (id, data) => {
-  const player = await PlayerRepository.getPlayerById(id);
+  const player = await PlayerRepository.findById(id);
   if (!player) {
     throw new appError('Player not found', 404);}
   const { name, age, email } = data;

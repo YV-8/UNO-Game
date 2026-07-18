@@ -1,5 +1,5 @@
-import GameService from '../../logic / services/game.service.js';
-import { sendSuccess } from '../../utils/responseHandler.js';
+import * as GameService from '../../logic/services/game.service.js';
+import { sendSuccess } from '../../helpers/responseHandler.middleware.js';
 
 export const getAllGame = async (req, res, next) => {
   try {

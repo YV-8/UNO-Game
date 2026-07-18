@@ -1,5 +1,5 @@
-import * as CardService from '../../logic/services/card.service.js';
-import { sendSuccess } from '../../utils/responseHandler.js';
+import * as CardService from '../../logic/services/cards.service.js';
+import { sendSuccess } from '../../helpers/responseHandler.middleware.js';
 
 export const getAllCards = async (req, res, next) => {
     try {

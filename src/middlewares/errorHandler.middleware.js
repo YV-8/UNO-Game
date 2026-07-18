@@ -1,4 +1,4 @@
-import { appError } from "./appError";
+import { appError } from './appError.js';
 /**
  * Middleware to handle errors in the application
  * @param {Error} err - The error object

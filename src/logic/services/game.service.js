@@ -39,7 +39,7 @@ export const createGame = async ({ title, status, maxPlayers }) => {
 };
 
 export const updateGame = async (id, data) => {
-    const game = await GameRepository.getGameById(id);
+    const game = await GameRepository.findById(id);
     if (!game) {
         throw new appError('Game not found', 404);}
     const { title, status, maxPlayers } = data;
