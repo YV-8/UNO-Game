@@ -11,7 +11,7 @@ export const getPlayerById = async (id) => {
   if (!id) {
     throw new appError('ID is required', 400);
   }
-  
+
   const player = await PlayerRepository.findById(id);
   if (!player) {
     throw new appError('Player not found', 404);
@@ -42,9 +42,8 @@ export const createPlayer = async ({ name, age, email }) => {
 export const updatePlayer = async (id, data) => {
   const player = await PlayerRepository.getPlayerById(id);
   if (!player) {
-    throw new appError('Player not found', 404);
-  }
-  const { name, age,email} = data;
+    throw new appError('Player not found', 404);}
+  const { name, age, email } = data;
   if (age !== undefined) {
     if (typeof age !== 'number' || age <= 0) {
       throw new appError('Age has to be a positive number', 400);
@@ -55,14 +54,7 @@ export const updatePlayer = async (id, data) => {
     if (!EMAIL_REGEX.test(email)) {
       throw new appError('Invalid email format', 400);
     }
-    // if (email !== player.email) {
-    //   const existingEmail = await PlayerRepository.findByEmail(email);
-    //   if (existingEmail) {
-    //     throw new appError('Email address is already registered by another player.', 400);
-    //   }
-    // }
   }
-
   const updatedData = {
     name: name ?? player.name,
     age: age ?? player.age,
