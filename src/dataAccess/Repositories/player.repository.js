@@ -1,31 +1,46 @@
-// src/DataAccess/repositories/player.repository.js
-import Player from '../models/player.model.js';
 
-class PlayerRepository {
-  async findAll() {
-    return await Player.findAll();
-  }
+const playerModel = (sequelize, DataTypes) => {
+  const Player = sequelize.define(
+    'Player',
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      age: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          isEmail: true,
+        },
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: 'players',
+      timestamps: false,
+    }
+  );
 
-  async findById(id) {
-    return await Player.findByPk(id);
-  }
+  Player.associate = (models) => {
+    Player.hasMany(models.Score, { foreignKey: 'playerId' });
+  };
 
-  async create(playerData) {
-    return await Player.create(playerData);
-  }
+  return Player;
+};
 
-  async update(id, playerData) {
-    const player = await Player.findByPk(id);
-    if (!player) return null;
-    return await player.update(playerData);
-  }
-
-  async delete(id) {
-    const player = await Player.findByPk(id);
-    if (!player) return false;
-    await player.destroy();
-    return true;
-  }
-}
-
-export default new PlayerRepository();
+export default playerModel;
