@@ -1,93 +1,225 @@
-# Capstone UNO
+# Capstone UNO — REST API
 
 
+🔗 **Repositorio / Repository:** [ https://gitlab.com/jala-university1/cohort-5/ES.CSPR-244.GA.T2.26.M1/SC/laboratorios-p4/adriana-monica-escobar-plaza/capstone-uno.git ]
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Selecciona tu idioma / Choose your language
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+<p align="center">
+  <a href="#-versión-en-español"> Español</a> &nbsp;|&nbsp;
+  <a href="#-english-version"> English</a>
+</p>
+---
 
-## Add your files
+##  English Version
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+###  Description
+
+REST API for managing a UNO card game (players, games, cards, and scores), built with **Node.js + Express**, using **Sequelize ORM** on top of a **MySQL** database running inside a **Docker** container.
+
+Here official websites the app or languages you need:
+[![Node.js](https://img.shields.io/badge/Node.js-Express-green)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-MySQL-blue)](https://www.docker.com/)
+[![Sequelize](https://img.shields.io/badge/ORM-Sequelize-lightgrey)](https://sequelize.org/)
+
+### Project architecture
+
+The project follows a layered architecture (Data Access / Logic / Presentation):
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/jala-university1/cohort-5/ES.CSPR-244.GA.T2.26.M1/SC/laboratorios-p4/adriana-monica-escobar-plaza/capstone-uno.git
-git branch -M main
-git push -uf origin main
+capstone-uno/
+├── node_modules/
+├── src/
+│   ├── dataAccess/
+│   │   ├── models/
+│   │   │   ├── cards.model.js
+│   │   │   ├── game.model.js
+│   │   │   ├── index.js
+│   │   │   ├── player.model.js
+│   │   │   └── score.model.js
+│   │   ├── repositories/
+│   │   │   ├── cards.repository.js
+│   │   │   ├── game.repository.js
+│   │   │   ├── player.repository.js
+│   │   │   └── score.repository.js
+│   │   └── database.js
+│   ├── helpers/
+│   │   └── responseHandler.middleware.js
+│   ├── logic/
+│   │   └── services/
+│   │       ├── cards.service.js
+│   │       ├── game.service.js
+│   │       ├── player.service.js
+│   │       └── score.service.js
+│   ├── middlewares/
+│   │   ├── appError.js
+│   │   └── errorHandler.middleware.js
+│   └── presentation/
+│       ├── controllers/
+│       │   ├── cards.controller.js
+│       │   ├── game.controller.js
+│       │   ├── player.controller.js
+│       │   └── score.controller.js
+│       └── routes/
+│           ├── cards.router.js
+│           ├── game.router.js
+│           ├── player.route.js
+│           └── score.router.js
+├── test/
+├── app.js
+├── docker-compose.yml
+├── package.json
+├── README.md
+└── server.js
+```
+- **dataAccess:** Sequelize models and repositories (data access layer).
+- **logic/services:** business logic.
+- **presentation:** controllers and routes (HTTP layer).
+- **middlewares:** centralized error handling.
+- **helpers:** utilities such as the response handler.
+
+This DataAccess use the index conected model and repositories with the service, index.js made the relation with the models, this is similar a factory.
+
+Then Logic and services use controller for manage the errors and this to call for route and app
+
+###  Prerequisites
+
+Before starting, make sure you have installed:
+
+| Tool | Official download |
+|---|---|
+|  Docker Desktop | https://www.docker.com/products/docker-desktop/ |
+|  Node.js (LTS) | https://nodejs.org/en/download |
+|  Visual Studio Code | https://code.visualstudio.com/download |
+|  Postman | https://www.postman.com/downloads/ |
+
+###  Step-by-step installation
+
+**1. Clone the repository**
+
+```bash
+git clone https://gitlab.com/jala-university1/cohort-5/ES.CSPR-244.GA.T2.26.M1/SC/laboratorios-p4/adriana-monica-escobar-plaza/capstone-uno.git
+
+cd capstone-uno
 ```
 
-## Integrate with your tools
+**2. Install dependencies**
 
-* [Set up project integrations](https://gitlab.com/jala-university1/cohort-5/ES.CSPR-244.GA.T2.26.M1/SC/laboratorios-p4/adriana-monica-escobar-plaza/capstone-uno/-/settings/integrations)
+```bash
+npm install
+```
 
-## Collaborate with your team
+**3. Check that port 3307 is free**
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+This project maps MySQL to local port **3307** (to avoid conflicts with a local MySQL install on 3306). Verify it's available:
 
-## Test and Deploy
+```bash
+# Windows (PowerShell)
+netstat -ano | findstr 3307
 
-Use the built-in continuous integration in GitLab.
+# Linux / Mac
+sudo lsof -i :3307
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+If the port is in use, free it up or change the port mapping in `docker-compose.yml`.
 
-***
+**4. Create the `.env` file**
 
-# Editing this README
+In the project root, create a `.env` file with the following example content:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```env
+# Server configuration
+PORT=3000
 
-## Suggestions for a good README
+# Database configuration (Docker)
+DB_HOST=localhost
+DB_PORT=3307
+DB_NAME=uno_db
+DB_USER=root
+DB_PASSWORD=root123
+DB_DIALECT=mysql
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+> ⚠️ Adjust these values to match your `docker-compose.yml` configuration.
 
-## Name
-Choose a self-explaining name for your project.
+**5. Start the database container with Docker**
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```bash
+docker-compose up -d
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+This will create and run the MySQL container in the background. Confirm it's running with:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```bash
+docker ps
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+**6. Start the API server**
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```bash
+npm run dev
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**7. Access the API**
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Go to the following address in your browser or HTTP client:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```
+http://localhost:3000/api
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+###  Postman collection
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+To test all the endpoints, import the Postman collection:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. Download the collection file: [ ← paste the Postman collection download link here ]
+   - *Tip:* you can upload the `.postman_collection.json` file to a `/postman` folder in this repo and link the file's "raw" URL (e.g. on GitHub: `https://raw.githubusercontent.com/user/repo/main/postman/UNO.postman_collection.json`), or publish the collection from Postman (**Share → Via Link**) and paste that link here.
+2. Open Postman → **Import** → paste the link or select the downloaded file.
+3. Make sure the `base_url` environment variable points to `http://localhost:3000`.
 
-## License
-For open source projects, say how it is licensed.
+## Pictura Postman
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+###  Available endpoints
+
+**Players**
+| Method | Endpoint |
+|---|---|
+| GET | `/api/players` |
+| GET | `/api/players/:id` |
+| POST | `/api/players` |
+| PUT | `/api/players/:id` |
+| DELETE | `/api/players` |
+
+**Games**
+| Method | Endpoint |
+|---|---|
+| GET | `/api/games` |
+| GET | `/api/games/:id` |
+| POST | `/api/games` |
+| PUT | `/api/games` |
+| DELETE | `/api/games` |
+
+**Cards**
+| Method | Endpoint |
+|---|---|
+| GET | `/api/cards` |
+| GET | `/api/cards/:id` |
+| POST | `/api/cards` |
+| PUT | `/api/cards/:id` |
+| DELETE | `/api/cards/:id` |
+
+**Scores**
+| Method | Endpoint |
+|---|---|
+| GET | `/api/scores` |
+| GET | `/api/scores/:id` |
+| POST | `/api/scores` |
+| PUT | `/api/scores/:id` |
+| DELETE | `/api/scores/:id` |
+
+---
+
+<p align="center"> Made with 💛 for the Capstone UNO project</p>
+---

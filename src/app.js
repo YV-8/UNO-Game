@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 app.use('/api/players', playerRoute);
-// Si tus otros requerimientos también piden /api/, puedes configurarlos igual:
+
 app.use('/api/games', gameRoute);
 app.use('/api/cards', cardsRoute);
 app.use('/api/scores', scoreRoute);
