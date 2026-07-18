@@ -1,7 +1,7 @@
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
 import { appError } from '../../middlewares/appError.js';
 
-const VALID_STATUSES = ['active', 'inactive', 'finished'];
+const VALID_STATUSES = ['active','waiting', 'inactive', 'finished'];
 
 export const getAllGame = async () => {
     return await GameRepository.findAll();

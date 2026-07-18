@@ -20,14 +20,12 @@ export const createCard = async ({ color, value, gameId }) => {
     throw new appError('color, value and gameId are required', 400);
   }
 
+  if (!VALID_COLORS.includes(color)) {
+    throw new appError(`color must be one of: ${VALID_COLORS.join(', ')}`, 400);
+  }
+
   const game = await GameRepository.findById(gameId);
   if (!game) throw new appError('Referenced game does not exist', 404);
-
-  if (!VALID_COLORS.includes(color)) {
-    if (!VALID_COLORS.test(color)) {
-      throw new appError(`status must be one of: ${VALID_STATUSES.join(', ')}`, 400);
-    }
-  }
 
   return await CardRepository.create({ color, value, gameId });
 };
@@ -38,15 +36,14 @@ export const updateCard = async (id, data) => {
 
   const { color, value, gameId } = data;
 
+  if (color !== undefined && !VALID_COLORS.includes(color)) {
+    throw new appError(`color must be one of: ${VALID_COLORS.join(', ')}`, 400);
+  }
+
   if (gameId !== undefined) {
     const game = await GameRepository.findById(gameId);
     if (!game) throw new appError('Referenced game does not exist', 404);
   }
-  if (!VALID_COLORS.includes(color)) {
-    if (!VALID_COLORS.test(color)) {
-      throw new appError('Invalid status format', 400);
-          }
-      }
 
   const updatedData = {
     color: color ?? card.color,
