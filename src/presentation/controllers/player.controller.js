@@ -1,10 +1,10 @@
 import * as PlayerService from '../../logic / services/player.service.js';
 import { sendSuccess } from '../../utils/responseHandler.js';
 
-export const getPlayer = async (req, res, next) => {
+export const getAllPlayer = async (req, res, next) => {
   try {
-    const player = await PlayerService.getPlayerById(req.params.id);
-    return sendSuccess(res, 200, 'Player retrieved successfully', player);
+    const players = await PlayerService.getAllPlayers();
+    return sendSuccess(res, 200, 'Players retrieved successfully', players);
   } catch (error) {
     next(error);
   }
