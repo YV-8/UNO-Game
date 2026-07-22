@@ -5,21 +5,30 @@ const playerModel = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
-      type: DataTypes.STRING(50),
+    username: {
+      type: DataTypes.STRING(30),
       allowNull: false,
-    },
-    age: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+      unique: true,
     },
     email: {
       type: DataTypes.STRING(60),
       allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
     }
   }, {
     tableName: 'player',
-    timestamps: true
+    timestamps: true,
+    defaultScope: {
+      attributes: { exclude: ['password'] }
+    },
+    scopes: {
+      withPassword: {
+        attributes: {}
+      }
+    }
   });
 
   Player.associate = (models) => {

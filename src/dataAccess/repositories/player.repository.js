@@ -9,8 +9,8 @@ class PlayerRepository {
     return await Player.findByPk(id);
   }
 
-  async findByTitle(title) {
-    return await Player.findOne({ where: { title } });
+  async findByUsername(username) {
+    return await Player.scope('withPassword').findOne({ where: { username } });
   }
 
   async findByEmail(email) {
