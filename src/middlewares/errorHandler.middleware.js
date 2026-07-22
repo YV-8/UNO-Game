@@ -26,8 +26,6 @@ export const errorHandler = (err, req, res, next) => {
   
   if (err.isOperational) {
     return res.status(statusCode).json({
-      success: false,
-      status: err.status,
       message: message,
     });
   }
@@ -36,8 +34,6 @@ export const errorHandler = (err, req, res, next) => {
   console.error('ERROR NO CONTROLADO:', err);
 
   return res.status(500).json({
-    success: false,
-    status: 'error',
     message: 'Something went wrong on the server.',
   });
 };

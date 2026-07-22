@@ -2,6 +2,7 @@ import PlayerRepository from '../../dataAccess/repositories/player.repository.js
 import { appError } from '../../middlewares/appError.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SALT_ROUNDS = 10;
 
 export const getAllPlayers = async () => {
   return await PlayerRepository.findAll();
@@ -19,47 +20,24 @@ export const getPlayerById = async (id) => {
   return player;
 };
 
-export const createPlayer = async ({ name, age, email }) => {
-  if (!name || age === undefined || !email) {
-    throw new appError('Name, age and email are required', 400);
-  }
+export const updatePlayer = async (id, data) => {
+  const player = await PlayerRepository.findById(id);
+  if (!player) throw new appError('Player not found', 404);
 
-  if (typeof age !== 'number' || age <= 0) {
-    throw new appError('Age has to be a positive number', 400);
-  }
+  const { username, email, password } = data;
 
-  if (!EMAIL_REGEX.test(email)) {
+  if (email !== undefined && !EMAIL_REGEX.test(email)) {
     throw new appError('Invalid email format', 400);
   }
 
-  const existing = await PlayerRepository.findByEmail(email);
-  if (existing) {
-    throw new appError('Email address is already registered.', 400);
-  }
-  return await PlayerRepository.create({ name, age, email });
-};
-
-export const updatePlayer = async (id, data) => {
-  const player = await PlayerRepository.findById(id);
-  if (!player) {
-    throw new appError('Player not found', 404);}
-  const { name, age, email } = data;
-  if (age !== undefined) {
-    if (typeof age !== 'number' || age <= 0) {
-      throw new appError('Age has to be a positive number', 400);
-    }
-  }
-
-  if (email !== undefined) {
-    if (!EMAIL_REGEX.test(email)) {
-      throw new appError('Invalid email format', 400);
-    }
-  }
   const updatedData = {
-    name: name ?? player.name,
-    age: age ?? player.age,
+    username: username ?? player.username,
     email: email ?? player.email
   };
+  if (password) {
+    updatedData.password = await bcrypt.hash(password, SALT_ROUNDS);
+  }
+
   return await PlayerRepository.update(id, updatedData);
 };
 
