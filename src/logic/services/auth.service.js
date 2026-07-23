@@ -65,6 +65,18 @@ export const login = async ({ username, password }) => {
     return { access_token: token };
 };
 
+export const getProfile = async (id) => {
+    const player = await PlayerRepository.findById(id);
+    if (!player) {
+        throw new appError('Player not found', 404);
+    }
+
+    return {
+        username: player.username,
+        email: player.email,
+    };
+};
+
 export const logout = async (token) => {
     addToBlacklist(token);
     return {};

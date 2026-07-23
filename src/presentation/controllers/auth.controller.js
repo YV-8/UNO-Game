@@ -21,6 +21,15 @@ export const login = async (req, res, next) => {
     }
 };
 
+export const getProfile = async (req, res, next) => {
+    try {
+        const profile = await AuthService.getProfile(req.player.id);
+        return res.status(200).json(profile);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const logout = async (req, res, next) => {
     try {
         const token = req.token;
