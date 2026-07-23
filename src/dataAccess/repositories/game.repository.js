@@ -9,8 +9,8 @@ class GameRepository {
     return await Game.findByPk(id);
   }
 
-  async findByTitle(title) {
-    return await Game.findOne({ where: { title } });
+  async findByName(name) {
+    return await Game.findOne({ where: { name } });
   }
 
   async create(gameData) {

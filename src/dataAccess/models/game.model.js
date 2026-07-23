@@ -7,19 +7,13 @@ const gameModel = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      title: {
+      name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      status: {
-        type: DataTypes.ENUM('active', 'waiting', 'inactive', 'finished'),
-        allowNull: false,
-        defaultValue: 'waiting',
-      },
-      maxPlayers: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 4,
+      rules: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
       createdAt: {
         type: DataTypes.DATE,
