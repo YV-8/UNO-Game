@@ -174,11 +174,8 @@ http://localhost:3000/api
 
 To test all the endpoints, import the Postman collection:
 
-1. Download the collection file: [ ← paste the Postman collection download link here ]
-   - *Tip:* you can upload the `.postman_collection.json` file to a `/postman` folder in this repo and link the file's "raw" URL (e.g. on GitHub: `https://raw.githubusercontent.com/user/repo/main/postman/UNO.postman_collection.json`), or publish the collection from Postman (**Share → Via Link**) and paste that link here.
-2. Open Postman → **Import** → paste the link or select the downloaded file.
-3. Make sure the `base_url` environment variable points to `http://localhost:3000`.
-
+1. Download the collection file: [https://drive.google.com/drive/folders/1UjeMDE55NhjNVnOP0tAGAKIAeFnU9GBA?usp=sharing]
+2. Open Postman → **Export** → paste the link or select the downloaded file.
 ## Pictura Postman
 
 ###  Available endpoints
