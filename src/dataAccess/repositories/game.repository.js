@@ -29,6 +29,16 @@ class GameRepository {
     await game.destroy();
     return true;
   }
+
+  async findByIdWithCurrentPlayer(id){
+    return await Game.findByPk(id, {
+      include: [
+        {
+          association: 'currentPlayer'
+        }
+      ]
+    })
+  }
 }
 
 export default new GameRepository();

@@ -32,6 +32,15 @@ class GamePlayerRepository {
         await gamePlayer.destroy();
         return true;
     }
+
+    async countActiveByGameId(gameId) {
+        return await GamePlayer.count({
+            where: {
+                gameId: gameId,
+                hasLeft: false
+            }
+        });
+    }
 }
 
 export default new GamePlayerRepository();

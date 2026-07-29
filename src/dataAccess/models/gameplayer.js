@@ -11,19 +11,28 @@ const gamePlayerModel = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
-            userId: {
+            playerId: {
                 type: DataTypes.INTEGER,
+                allowNull: false,
+            },
+            username: {
+                type: DataTypes.STRING(30),
                 allowNull: false,
             },
             turnOrder: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                defaultVaLUE: 0,
+                defaultValue: 0,
             },
             score: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 defaultValue: 0,
+            },
+            hasLeft: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
             },
             joinedAt: {
                 type:DataTypes.DATE,
@@ -35,14 +44,14 @@ const gamePlayerModel = (sequelize, DataTypes) => {
             tableName: 'game_players',
             timestamps: false,
             indexes: [
-                { unique: true, fields: ['gameId', 'userId']}
+                { unique: true, fields: ['gameId', 'playerId']}
             ],
         }
     );
 
     GamePlayer.associate = (models) => {
         GamePlayer.belongsTo(models.Game, { foreignKey: 'gameId' });
-        GamePlayer.belongsTo(models.User, { foreignKey: 'userId' });
+        GamePlayer.belongsTo(models.Player, { foreignKey: 'playerId' });
     };
     return GamePlayer;
 };
