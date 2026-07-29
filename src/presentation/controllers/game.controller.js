@@ -50,10 +50,10 @@ export const deleteGame = async (req, res, next) => {
 };
 
 export const getGameState = async (req, res, next) => {
-  const { id } = req.params;
   try {
-    const result = await GameService.getGameState(id);
-    return sendSuccess(res, 200, 'Game state retrieved successfully', result);
+    const gameId = req.body?.game_id;
+    const result = await GameService.getGameState(Number(gameId));
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -74,6 +74,26 @@ export const getCurrentPlayer = async (req, res, next) => {
   try {
     const result = await GameService.getCurrentPlayer(id);
     return sendSuccess(res, 200, 'Current player retrieved successfully', result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const startGame = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const game = await GameService.startGame(id, req.player.id);
+    return sendSuccess(res, 200, 'Game started successfully', game);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const endGame = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const game = await GameService.endGame(id, req.player.id);
+    return sendSuccess(res, 200, 'Game ended successfully', game);
   } catch (error) {
     next(error);
   }

@@ -19,15 +19,6 @@ export const getPlayerById = async (req, res, next) => {
     next(error);
   }
 };
-export const createPlayer = async (req, res, next) => {
-  try {
-    const Player = await PlayerService.createPlayer(req.body);
-
-    return sendSuccess(res, 201, 'Player created successfully', Player);
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const updatePlayer = async (req, res, next) => {
   const { id } = req.params;

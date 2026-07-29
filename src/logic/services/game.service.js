@@ -1,4 +1,5 @@
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
+import GamePlayerRepository from '../../dataAccess/repositories/gamePlayer.repository.js';
 import { appError } from '../../middlewares/appError.js';
 
 const VALID_STATUSES = ['waiting', 'Inprogress', 'finished'];
@@ -33,11 +34,6 @@ export const createGame = async ({ name, rules, maxPlayers }) => {
     if (typeof maxPlayers !== 'number' || maxPlayers <= 0) {
         throw new appError('maxPlayers has to be a positive number', 400);
     }
-
-    const existing = await GameRepository.findByName(name);
-    if (existing) {
-        throw new appError('Name is already registered.', 400);
-    }
     return await GameRepository.create({ name, rules, maxPlayers, state: 'waiting' });
 };
 
@@ -54,8 +50,6 @@ export const updateGame = async (id, data) => {
     if (maxPlayers !== undefined && (typeof maxPlayers !== 'number' || maxPlayers <= 0)) {
         throw new appError('maxPlayers has to be a positive number', 400);
     }
-
-    const { name, rules } = data;
 
     const updatedData = {
         name: name ?? game.name,
@@ -105,4 +99,50 @@ export const getCurrentPlayer = async (id) => {
     }
 
     return { game_id: game.id, current_player: game.currentPlayer.username };
+};
+
+export const startGame = async (id, requesterId) => {
+    if (!id) throw new appError('ID is required', 400);
+
+    const game = await GameRepository.findById(id);
+    if (!game) throw new appError('Game not found', 404);
+
+    if (game.creatorId !== requesterId) {
+        throw new appError('Only the creator of the game can start it', 403);
+    }
+
+    if (game.state !== 'waiting') {
+        throw new appError('This game cannot be started from its current state', 400);
+    }
+
+    const activePlayers = await GamePlayerRepository.findAllByGameId(id);//ASC
+
+    //activePlayers.length <= game.maxPlayers / 2 -> para cuando necesite que sea mas de la mayoria
+    if (!activePlayers || activePlayers.length <= 2) {
+        throw new appError('Minium maxPlayers must have joined to start the game', 400);
+    }
+
+    const firstPlayer = activePlayers[0];
+
+    return await GameRepository.update(id, {
+        state: 'Inprogress',
+        currentPlayerId: firstPlayer.playerId,
+    });
+};
+
+export const endGame = async (id, requesterId) => {
+    if (!id) throw new appError('ID is required', 400);
+
+    const game = await GameRepository.findById(id);
+    if (!game) throw new appError('Game not found', 404);
+
+    if (game.creatorId !== requesterId) {
+        throw new appError('Only the creator of the game can end it', 403);
+    }
+
+    if (game.state !== 'Inprogress') {
+        throw new appError('This game is not in progress', 400);
+    }
+
+    return await GameRepository.update(id, { state: 'finished' });
 };
