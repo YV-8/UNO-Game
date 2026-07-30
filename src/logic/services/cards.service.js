@@ -75,13 +75,14 @@ export const createInitCard = async (gameId) => {
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
   const randomValue = String(Math.floor(Math.random() * 10));
-  await createCard({
+  const newCard = await createCard({
     color: randomColor,
     value: randomValue,
     gameId: numGameId,
     location: 'discard', // Asegúrate de mapear este nuevo campo si tu DB lo requiere
     discardOrder: 1
   });
+  return newCard;
 }
 
 /**

@@ -103,12 +103,12 @@ export const getGameScores = async (req, res, next) => {
 };
 
 export const join = async (req, res, next) => {
+
+    const { access_token: accessToken, ...data } = req.body;
     try {
         const id = Number(req.body?.game_id);
-        await GamePlayerService.joinGame({
-            gameId: id,
-            playerId: req.player.id,
-            username: req.player.username,
+        await GameService.joinGame({
+            gameId: id,accessToken
         });
         return sendSuccess(res, 200, 'User joined the game successfully');
     } catch (error) {
@@ -117,11 +117,11 @@ export const join = async (req, res, next) => {
 };
 
 export const leave = async (req, res, next) => {
+    const { access_token: accessToken, ...data } = req.body;
     try {
         const id = Number(req.body?.game_id);
-        await GamePlayerService.leaveGame({
-            gameId:id,
-            playerId: req.player.id,
+        await GameService.leaveGame({
+            gameId:id,accessToken
         });
         return sendSuccess(res, 200, 'User left the game successfully');
     } catch (error) {
@@ -131,8 +131,8 @@ export const leave = async (req, res, next) => {
 
 export const startGame = async (req, res, next) => {
   try {
-    const id = Number(req.body?.game_id);
-    const game = await GameService.startGame(id, req.player.id);
+    const { game_id, access_token } = req.body || {};
+    await GameService.startGame(game_id, access_token);
     return sendSuccess(res, 200, 'Game started successfully');
   } catch (error) {
     next(error);
@@ -141,8 +141,8 @@ export const startGame = async (req, res, next) => {
 
 export const endGame = async (req, res, next) => {
   try {
-    const id = Number(req.body?.game_id);
-    const game = await GameService.endGame(id, req.player.id);
+    const { game_id, access_token } = req.body || {};
+    const game = await GameService.endGame(game_id, access_token);
     return sendSuccess(res, 200, 'Game ended successfully');
   } catch (error) {
     next(error);

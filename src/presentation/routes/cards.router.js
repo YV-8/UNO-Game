@@ -10,6 +10,6 @@ router.put('/:id', cardsController.updateCard);
 router.delete('/:id', cardsController.deleteCard);
 
 
-router.get('/top-card', cardsController.getTopCard);
+router.post('/top-card', cardsController.getTopCard);
 
 export default router;

@@ -6,8 +6,8 @@ const router = Router();
 router.get('/', gameController.getAllGame);
 router.get('/id', gameController.getGameById);
 router.post('/', gameController.createGame);
-router.put('/', gameController.updateGame);
-router.delete('/', gameController.deleteGame);
+router.put('/:id', gameController.updateGame);
+router.delete('/:id', gameController.deleteGame);
 
 router.post('/state', gameController.getGameState);
 router.post('/players', gameController.getGamePlayers);

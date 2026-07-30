@@ -50,11 +50,11 @@ export const deleteCard = async (req, res, next) => {
 };
 
 export const getTopCard = async (req, res, next) => {
-    const { id } = req.params;
     try {
+        const id = Number(req.body?.game_id);
         const topCardData = await CardService.getTopCard(id);
         
-        return sendSuccess(res, 200, 'Top card retrieved successfully', topCardData);
+        return res.status(200).json(topCardData);
     } catch (error) {
         next(error);
     }

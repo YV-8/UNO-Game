@@ -36,25 +36,32 @@ capstone-uno/
 │   │   ├── models/
 │   │   │   ├── cards.model.js
 │   │   │   ├── game.model.js
+│   │   │   ├── gamePlayer.model.js
 │   │   │   ├── index.js
 │   │   │   ├── player.model.js
 │   │   │   └── score.model.js
 │   │   ├── repositories/
 │   │   │   ├── cards.repository.js
 │   │   │   ├── game.repository.js
+│   │   │   ├── gamePlayer.repository.js
 │   │   │   ├── player.repository.js
 │   │   │   └── score.repository.js
 │   │   └── database.js
 │   ├── helpers/
+│   │   ├── responseHandle.middleware.js
+│   │   ├── tokenBlacklist.js
+│   │   ├── unoDeck.js
 │   │   └── responseHandler.middleware.js
 │   ├── logic/
 │   │   └── services/
+│   │       ├── auth.service.js
 │   │       ├── cards.service.js
 │   │       ├── game.service.js
 │   │       ├── player.service.js
 │   │       └── score.service.js
 │   ├── middlewares/
 │   │   ├── appError.js
+│   │   ├── auth.middleware.js
 │   │   └── errorHandler.middleware.js
 │   └── presentation/
 │       ├── controllers/
@@ -132,14 +139,17 @@ In the project root, create a `.env` file with the following example content:
 ```env
 # Server configuration
 PORT=3000
-
-# Database configuration (Docker)
-DB_HOST=localhost
+NODE_ENV=development
+#MySQL -> connection
 DB_PORT=3307
-DB_NAME=uno_db
-DB_USER=root
-DB_PASSWORD=root123
+DB_NAME=Unogame_db
+DB_USER=username
+DB_PASSWORD=password
+DB_HOST=127.0.0.1
 DB_DIALECT=mysql
+#JWT
+JWT_SECRET=password
+JWT_EXPIRES_IN=1h
 ```
 
 > ⚠️ Adjust these values to match your `docker-compose.yml` configuration.
@@ -174,7 +184,7 @@ http://localhost:3000/api
 
 To test all the endpoints, import the Postman collection:
 
-1. Download the collection file: [https://drive.google.com/drive/folders/1UjeMDE55NhjNVnOP0tAGAKIAeFnU9GBA?usp=sharing]
+1. Download the collection file: [https://drive.google.com/file/d/1RirRrmNWYDLWZgogkSZHpwcN2vrQdTax/view?usp=sharing]
 2. Open Postman → **Export** → paste the link or select the downloaded file.
 ###  Available endpoints
 

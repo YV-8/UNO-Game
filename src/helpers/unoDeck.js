@@ -72,6 +72,7 @@ const COLOR_LABELS = {
 
 //INVESTIGAR
 export const formatCard = (card) => {
+    if (!card) return 'No card';
     const cardValue = VALUE_LABELS[card.value] ?? card.value;
     if (!card.color) return cardValue;
     return `${COLOR_LABELS[card.color]} ${cardValue}`;
