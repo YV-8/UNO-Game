@@ -16,11 +16,7 @@ const gameModel = (sequelize, DataTypes) => {
         allowNull: true,
       },
       state: {
-        type: DataTypes.ENUM('waiting', 'Inprogress', 'finished'),
-        allowNull: false,
-      },
-      maxPlayers: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.ENUM('waiting', 'in_progress', 'finished'),
         allowNull: false,
       },
       creatorId: {

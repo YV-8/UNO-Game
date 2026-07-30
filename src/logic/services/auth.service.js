@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
 import { appError } from '../../middlewares/appError.js';
+import { verifyAccessToken } from '../../helpers/verifyToken.js';
 import { addToBlacklist } from '../../helpers/tokenBlacklist.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,12 +34,6 @@ export const register = async ({ username, email, password }) => {
         email,
         password: hashedPassword,
     });
-
-    // return {
-    //     id: player.id,
-    //     username: player.username,
-    //     email: player.email,
-    // };
 };
 
 export const login = async ({ username, password }) => {
@@ -65,19 +60,20 @@ export const login = async ({ username, password }) => {
     return { access_token: token };
 };
 
-export const getProfile = async (id) => {
-    const player = await PlayerRepository.findById(id);
+export const getProfile = async (accessToken) => {
+    const decoded = verifyAccessToken(accessToken);
+    const player = await PlayerRepository.findById(decoded.id);
     if (!player) {
         throw new appError('Player not found', 404);
     }
-
     return {
         username: player.username,
         email: player.email,
     };
 };
 
-export const logout = async (token) => {
-    addToBlacklist(token);
+export const logout = async (accessToken) => {
+    const decoded = verifyAccessToken(accessToken);
+    addToBlacklist(accessToken);
     return {};
 };

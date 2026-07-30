@@ -3,7 +3,7 @@ import { GamePlayer } from '../models/index.js';
 class GamePlayerRepository {
     async findAllByGameId(gameId) {
         return await GamePlayer.findAll({
-            where: { gameId },
+            where: { gameId,hasLeft: false },
             order: [['turnOrder', 'ASC']],
         });
     }
@@ -12,9 +12,9 @@ class GamePlayerRepository {
         return await GamePlayer.findOne({ where: { gameId, playerId } });
     }
 
-    async countByGameId(gameId) {
-        return await GamePlayer.count({ where: { gameId } });
-    }
+    // async countByGameId(gameId) {
+    //     return await GamePlayer.count({ where: { gameId } });
+    // }
 
     async create(gamePlayerData) {
         return await GamePlayer.create(gamePlayerData);
@@ -38,7 +38,7 @@ class GamePlayerRepository {
             where: {
                 gameId: gameId,
                 hasLeft: false
-            }
+            },
         });
     }
 }

@@ -19,6 +19,15 @@ const cardModel = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
+            location: {
+                type: DataTypes.ENUM('deck', 'hand', 'discard'),
+                allowNull: false,
+                defaultValue: 'deck',
+            },
+            discardOrder: {
+                type: DataTypes.INTEGER,
+                allowNull: true, // solo -> location = 'discard'
+            },
             createdAt: {
                 type: DataTypes.DATE,
                 allowNull: false,
