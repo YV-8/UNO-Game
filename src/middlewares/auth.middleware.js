@@ -15,17 +15,17 @@ export const protect = (req, res, next) => {
             throw new appError('Token has been invalidated', 401);
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = verifyAccessToken(token);
         req.player = decoded;
         req.token = token;
         next();
     } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return next(new appError('Token has expired', 401));
-        }
-        if (error.name === 'JsonWebTokenError') {
-            return next(new appError('Invalid token', 401));
-        }
+        // if (error.name === 'TokenExpiredError') {
+        //     return next(new appError('Token has expired', 401));
+        // }
+        // if (error.name === 'JsonWebTokenError') {
+        //     return next(new appError('Invalid token', 401));
+        // }
         next(error);
     }
 };

@@ -48,3 +48,14 @@ export const deleteCard = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getTopCard = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const topCardData = await CardService.getTopCard(id);
+        
+        return sendSuccess(res, 200, 'Top card retrieved successfully', topCardData);
+    } catch (error) {
+        next(error);
+    }
+};
