@@ -228,12 +228,10 @@ export const leaveGame = async ({ gameId, accessToken }) => {
     const game = await GameRepository.findById(numGameId);
     
     if (!game) throw new appError('Game not found', 404);
-
     const gamePlayer = await GamePlayerRepository.findByGameAndPlayer(numGameId, decoded.id);
     if (!gamePlayer || gamePlayer.hasLeft) {
         throw new appError('User is not an active player in this game', 400);
     }
-
     await GamePlayerRepository.update(gamePlayer.id, { hasLeft: true });
     return {};
 };

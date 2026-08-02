@@ -4,7 +4,9 @@
   "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cross-env NODE_ENV=test jest --watchAll",
+    "test:ci": "cross-env NODE_ENV=test jest --runInBand",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage --runInBand",
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
@@ -27,5 +29,13 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.23.0",
     "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "babel-jest": "^30.4.1",
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }
