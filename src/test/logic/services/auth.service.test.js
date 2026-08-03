@@ -49,7 +49,7 @@ describe('PlayerService', () => {
                 })
             ).rejects.toMatchObject({
                 statusCode: 400, message: 'Email address is already registered.'
-            });
+            });//cambiar a 409 por reglas de error
         });
 
         it('debe registrar el jugador si todo es válido', async () => {

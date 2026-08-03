@@ -1,5 +1,6 @@
 # Dependencias (NUNCA se suben porque son muy pesadas y se reconstruyen con npm install)
 node_modules/
+coverage/
 jspm_packages/
 web_modules/
 

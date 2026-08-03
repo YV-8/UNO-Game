@@ -730,6 +730,7 @@ describe('GameService', () => {
             expect(GamePlayerRepository.update).toHaveBeenCalledWith(5, { hasLeft: true });
             expect(result).toEqual({});
         });
+        //deja el turno a otro
     });
 
 });
