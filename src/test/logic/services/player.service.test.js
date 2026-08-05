@@ -1,4 +1,3 @@
-import { INET } from 'sequelize';
 import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
 import * as PlayerService from '../../../logic/services/player.service.js';
 

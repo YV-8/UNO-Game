@@ -57,7 +57,7 @@ describe('GameService', () => {
     });
 
     describe('createGame', () => {
-        it('debe lanzar error 401 si el token es inválido', async () => {
+        it('Should th row error 401 if its invalid token', async () => {
 
             verifyAccessToken.mockImplementation(() => {
                 throw new appError('Invalid token', 401);
@@ -65,7 +65,7 @@ describe('GameService', () => {
 
             await expect(
                 GameService.createGame({
-                    name: 'Partida',
+                    name: 'Solitario',
                     rules: 'std', accessToken: 'bad'
                 })
             ).rejects.toMatchObject({

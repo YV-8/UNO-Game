@@ -1,4 +1,3 @@
-console.log('============== ¡JEST SÍ ESTÁ LEYENDO ESTE ARCHIVO! ==============');
 module.exports = {
     testEnvironment: 'node',
 
@@ -13,12 +12,13 @@ module.exports = {
     clearMocks: true,
     verbose: true,
 
-    collectCoverage: false, // actívalo con --coverage cuando quieras
+    collectCoverage: false, // actívate --coverage
     coverageDirectory: 'coverage',
     collectCoverageFrom: [
         'src/logic/services/**/*.js',
+        'src/presentation/controllers/**/*.js',
         'src/dataAccess/repositories/**/*.js',
-        '!src/dataAccess/models/**',       // Excluye explícitamente los modelos (¡los saca del reporte!)
+        '!src/dataAccess/models/**',
         '!src/dataAccess/database.js'
     ],
     coveragePathIgnorePatterns: ['/node_modules/'],
