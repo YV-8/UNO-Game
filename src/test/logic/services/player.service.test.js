@@ -10,7 +10,7 @@ describe('PlayerService', () => {
 
   describe('getAllPlayers', () => {
     it('debe retornar todos los jugadores', async () => {
-      
+
       const mockPlayers = [{ id: 1, username: 'moni' }, { id: 2, username: 'luigi' }];
       PlayerRepository.findAll.mockResolvedValue(mockPlayers);
       const result = await PlayerService.getAllPlayers();
@@ -27,7 +27,7 @@ describe('PlayerService', () => {
         message: 'ID is required',
       });
     });
-    
+
     it('debe llamar al id correcto', async () => {
       const mockPlayers = [{ id: 1, username: 'Moni' }];
       PlayerRepository.findById.mockResolvedValue(mockPlayers);
@@ -41,7 +41,7 @@ describe('PlayerService', () => {
       PlayerRepository.findById.mockResolvedValue(existingPlayer);
 
       await expect(
-      PlayerService.updatePlayer(1, { email: 'formato-invalido' })
+        PlayerService.updatePlayer(1, { email: 'formato-invalido' })
       ).rejects.toMatchObject({ statusCode: 400, message: 'Invalid email format' });
     });
 
@@ -69,18 +69,44 @@ describe('PlayerService', () => {
     it('debe lanzar error 404 si el jugador no existe', async () => {
       PlayerRepository.findById.mockResolvedValue(null);
       await expect(PlayerService.updatePlayer(666, { username: 'Amore' })).rejects.toMatchObject({
-      statusCode: 404,
-      message: 'Player not found',
-  });
+        statusCode: 404,
+        message: 'Player not found',
+      });
     });
 
+    it('debe hashear el password si se envía en el update', async () => {
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com', password: 'oldHashedPass' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue({ ...existingPlayer, password: 'newHashedPass' });
+
+      await PlayerService.updatePlayer(1, { password: 'newPlainPassword' });
+
+      const calledWith = PlayerRepository.update.mock.calls[0][1];
+      expect(calledWith.password).toBeDefined();
+      expect(calledWith.password).not.toBe('newPlainPassword'); // nunca en texto plano
+      expect(typeof calledWith.password).toBe('string');
+    });
+
+    it(' debe decir the no incluir password en updatedData si no se envía', async () => {
+
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue(existingPlayer);
+
+      await PlayerService.updatePlayer(1, { username: 'ale2' });
+
+      const calledWith = PlayerRepository.update.mock.calls[0][1];
+      expect(calledWith.password).toBeUndefined();
+    });
+
+
     it('debe mantener los valores previos si no se envían campos', async () => {
-      const existingPlayer = { id: 1,username: 'ale', email: 'ale@test.com' };
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
       PlayerRepository.findById.mockResolvedValue(existingPlayer);
       PlayerRepository.update.mockResolvedValue(existingPlayer);
 
       const result = await PlayerService.updatePlayer(1, {});
-      
+
       expect(PlayerRepository.update).toHaveBeenCalledWith(1, {
         username: 'ale',
         email: 'ale@test.com',
@@ -91,7 +117,7 @@ describe('PlayerService', () => {
     it('debe actualizar solo los campos enviados', async () => {
       const existingPlayer = { id: 1, username: 'mario', email: 'mario@test.com' };
       PlayerRepository.findById.mockResolvedValue(existingPlayer);
-      PlayerRepository.update.mockResolvedValue({ ...existingPlayer, username:'marciano'});
+      PlayerRepository.update.mockResolvedValue({ ...existingPlayer, username: 'marciano' });
       const result = await PlayerService.updatePlayer(1, { username: 'marciano' });
 
       expect(PlayerRepository.update).toHaveBeenCalledWith(1, {

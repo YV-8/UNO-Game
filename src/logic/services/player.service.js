@@ -1,5 +1,6 @@
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
 import { appError } from '../../middlewares/appError.js';
+import bcrypt from 'bcryptjs';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_ROUNDS = 10;

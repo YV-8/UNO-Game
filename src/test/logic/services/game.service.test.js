@@ -456,7 +456,6 @@ describe('GameService', () => {
         });
 
         it('debe iniciar el juego con el primer jugador como currentPlayerId', async () => {
-            // Arrange
             verifyAccessToken.mockReturnValue({ id: 1 });
             GameRepository.findById.mockResolvedValue({ id: 1, creatorId: 1, state: 'waiting' });
             GamePlayerRepository.findAllByGameId.mockResolvedValue([
@@ -465,10 +464,8 @@ describe('GameService', () => {
             ]);
             GameRepository.update.mockResolvedValue({});
 
-            // Act
             const result = await GameService.startGame(1, 'valid');
 
-            // Assert
             expect(GameRepository.update).toHaveBeenCalledWith(1, {
                 state: 'in_progress',
                 currentPlayerId: 10,

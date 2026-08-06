@@ -17,7 +17,7 @@ describe('PlayerService', () => {
 
     describe('Register Auth -> createPlayer', () => {
 
-        it('debe retornar error 400 si falta un campo requerido', async () => {
+        it('should throw error 400 missing fields', async () => {
             await expect(
                 AuthService.register({ username: '', email: 'moni@test.com', password: '123' })
             ).rejects.toMatchObject({
@@ -26,7 +26,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar error 400 si el email es inválido', async () => {
+        it('should throw error 400 invalid email', async () => {
             PlayerRepository.findByUsername.mockResolvedValue(null);
             await expect(
                 AuthService.register({ username: 'moni', email: 'ssjfs-843', password: '123' })
@@ -38,10 +38,9 @@ describe('PlayerService', () => {
             expect(PlayerRepository.create).not.toHaveBeenCalled();
         });
 
-        it('debe retornar error 400 si el email ya existe', async () => {
+        it('should throw error 400 if email alredy exist', async () => {
             PlayerRepository.findByEmail.mockResolvedValue({
-                id: 5, email: 'moni@test.com'
-            });
+                id: 5, email: 'moni@test.com'});
 
             await expect(
                 AuthService.register({
@@ -52,7 +51,20 @@ describe('PlayerService', () => {
             });//cambiar a 409 por reglas de error
         });
 
-        it('debe registrar el jugador si todo es válido', async () => {
+        it('should throw error 400 already exist user', async () => {
+            PlayerRepository.findByUsername.mockResolvedValue({
+                username:'Moni'});
+
+            await expect(
+                AuthService.register({
+                    username: 'Moni', email: 'moni@test.com', password: 'pass123'
+                })
+            ).rejects.toMatchObject({
+                statusCode: 400, message: 'User already exists'
+            });
+        });
+
+        it('should throw the player is valid', async () => {
             PlayerRepository.findByUsername.mockResolvedValue(null);
             PlayerRepository.findByEmail.mockResolvedValue(null);
             PlayerRepository.create.mockResolvedValue({
@@ -73,7 +85,7 @@ describe('PlayerService', () => {
     });
 
     describe('Login Auth -> loginPlayer', () => {
-        it('debe retornar error 400 si falta un campo requerido', async () => {
+        it('should throw error 400 miss a field need', async () => {
             await expect(
                 AuthService.login({ username: '', password: '123' })
             ).rejects.toMatchObject({
@@ -82,7 +94,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar error 401 si el usuario no existe', async () => {
+        it('should throw error 401 the user doesnt exist', async () => {
             PlayerRepository.findByUsername.mockResolvedValue(null);
             await expect(
                 AuthService.login({ username: 'nonexistent', password: '123' })
@@ -92,7 +104,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar error 401 si la contraseña es incorrecta', async () => {
+        it('should throw error 401 incorrect password', async () => {
             const mockPlayer = { id: 1, username: 'moni', password: '12334pass' };
             PlayerRepository.findByUsername.mockResolvedValue(mockPlayer);
 
@@ -104,7 +116,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar un token si las credenciales son correctas', async () => {
+        it('should throw a token the credentials are corrects', async () => {
             const mockPlayer = { id: 1, username: 'moni', password: await bcrypt.hash('pass123', 10) };
             PlayerRepository.findByUsername.mockResolvedValue(mockPlayer);
 
@@ -116,7 +128,7 @@ describe('PlayerService', () => {
     });
 
     describe('getProfile Auth -> getProfile', () => {
-        it('debe retornar error 401 si el token es inválido', async () => {
+        it('should throw error 401 ivalid token ' , async () => {
             verifyAccessToken.mockImplementation(() => {
                 throw new appError('Invalid token', 401);
             });
@@ -128,7 +140,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar error 404 si el jugador no existe', async () => {
+        it('should throw error 404 not exist player', async () => {
             const validToken = 'valid.jwt.token';
             verifyAccessToken.mockReturnValue({ id: 666, username: 'amore' });
             PlayerRepository.findById.mockResolvedValue(null);
@@ -141,7 +153,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe retornar el perfil del jugador si el token es válido', async () => {
+        it('should throw the profile the user is valid', async () => {
             const validToken = 'valid.jwt.token';
             const mockPlayer = { id: 666, username: 'amore', email: 'amore@test.com' };
             verifyAccessToken.mockReturnValue({ id: 666, username: 'amore' });
@@ -156,7 +168,7 @@ describe('PlayerService', () => {
         });
     });
     describe('Logout', () => {
-        it('debe lanzar error 400 si no se pasa el token', async () => {
+        it('should throw error 400 miss token', async () => {
             verifyAccessToken.mockImplementation(() => {
                 throw new appError('access_token is required', 400);
             });
@@ -167,7 +179,7 @@ describe('PlayerService', () => {
             });
         });
 
-        it('debe lanzar error 401 si el token es inválido', async () => {
+        it('should throw error 401 ivalid token', async () => {
 
             verifyAccessToken.mockImplementation(() => {
                 throw new appError('Invalid token', 401);
@@ -180,7 +192,7 @@ describe('PlayerService', () => {
             expect(addToBlacklist).not.toHaveBeenCalled();
         });
 
-        it('debe eliminar el jugador', async () => {
+        it('should throw delete player', async () => {
             const validToken = 'valid.jwt.token';
             verifyAccessToken.mockReturnValue({ id: 1, username: 'moni' });
 
