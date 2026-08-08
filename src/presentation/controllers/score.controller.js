@@ -1,5 +1,5 @@
 import * as ScoreService from '../../logic/services/score.service.js';
-import { sendSuccess } from '../../helpers/responseHandler.middleware.js';
+import { sendSuccess } from '../../middlewares/responseHandler.middleware.js';
 
 export const getAllScore = async (req, res, next) => {
     try {

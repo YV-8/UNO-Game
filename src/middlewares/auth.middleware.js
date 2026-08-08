@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { appError } from './appError.js';
-import { isBlacklisted } from '../helpers/tokenBlacklist.js';
+import { isBlacklisted } from './tokenBlacklist.js';
 
-export const protect = (req, res, next) => {
+export const authenticate = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -20,12 +20,28 @@ export const protect = (req, res, next) => {
         req.token = token;
         next();
     } catch (error) {
-        // if (error.name === 'TokenExpiredError') {
-        //     return next(new appError('Token has expired', 401));
-        // }
-        // if (error.name === 'JsonWebTokenError') {
-        //     return next(new appError('Invalid token', 401));
-        // }
         next(error);
     }
 };
+
+export const verifyAccessToken = (token) => {
+    if (!token) {
+        throw new appError('access_token is required', 400);
+    }
+
+    if (isBlacklisted(token)) {
+        throw new appError('Token has been invalidated', 401);
+    }
+
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            throw new appError('Token has expired', 401);
+        }
+        throw new appError('Invalid token', 401);
+    }
+};
+//func
+//api/game/update
+//headers
