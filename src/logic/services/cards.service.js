@@ -1,51 +1,32 @@
 import CardRepository from '../../dataAccess/repositories/cards.repository.js';
-import GameRepository from '../../dataAccess/repositories/game.repository.js';
-import { appError } from '../../middlewares/appError.js';
+import Result from '../monads/result.js';
 import { formatCard } from '../../helpers/unoDeck.js';
-const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
+import * as cardRules from '../validators/cardRules.js';
 
 export const getAllCards = async () => {
-  return await CardRepository.findAll();
+  const cards = await CardRepository.findAll();
+  return Result.Ok(cards);
 };
 
 export const getCardById = async (id) => {
-  if (!id) throw new appError('ID is required', 400);
-
-  const card = await CardRepository.findById(id);
-  if (!card) { throw new appError('Card not found', 404); }
-  return card;
+  const result = await cardRules.validateGetCard({ id });
+  if (result.isErr()) return result;
+  return Result.Ok(result.value.card);
 };
 
 export const createCard = async ({ color, value, gameId, location = 'deck', discardOrder = null }) => {
-  if (!color || value === undefined || !gameId) {
-    throw new appError('color, value and gameId are required', 400);
-  }
+  const result = await cardRules.validateCreateCard({ color, value, gameId, location, discardOrder });
+  if (result.isErr()) return result;
 
-  if (!VALID_COLORS.includes(color)) {
-    throw new appError(`color must be one of: ${VALID_COLORS.join(', ')}`, 400);
-  }
-
-  const game = await GameRepository.findById(gameId);
-  if (!game) throw new appError('Referenced game does not exist', 404);
-
-  return await CardRepository.create({ color, value, gameId, location, discardOrder });
+  const card = await CardRepository.create({ color, value, gameId, location, discardOrder });
+  return Result.Ok(card);
 };
 
 export const updateCard = async (id, data) => {
-  const card = await CardRepository.findById(id);
-  if (!card) throw new appError('Card not found', 404);
+  const result = await cardRules.validateUpdateCard({ id, ...data });
+  if (result.isErr()) return result;
 
-  const { color, value, gameId,location, discardOrder} = data;
-
-  if (color !== undefined && !VALID_COLORS.includes(color)) {
-    throw new appError(`color must be one of: ${VALID_COLORS.join(', ')}`, 400);
-  }
-
-  if (gameId !== undefined) {
-    const game = await GameRepository.findById(gameId);
-    if (!game) throw new appError('Referenced game does not exist', 404);
-  }
-
+  const { card, color, value, gameId, location, discardOrder } = result.value;
   const updatedData = {
     color: color ?? card.color,
     value: value ?? card.value,
@@ -53,15 +34,18 @@ export const updateCard = async (id, data) => {
     location: location ?? card.location,
     discardOrder: discardOrder ?? card.discardOrder,
   };
-  return await CardRepository.update(id, updatedData);
+
+  const updatedCard = await CardRepository.update(id, updatedData);
+  return Result.Ok(updatedCard);
 };
 
 export const deleteCard = async (id) => {
-  if (!id) throw new appError('ID is required', 400);
+  const result = await cardRules.validateDeleteCard({ id });
+  if (result.isErr()) return result;
 
   const deleted = await CardRepository.delete(id);
-  if (!deleted) throw new appError('Card not found', 404);
-  return {};
+  if (!deleted) return Result.Err({ statusCode: 404, message: 'Card not found' });
+  return Result.Ok({});
 };
 
 /**
@@ -73,37 +57,36 @@ export const createInitCard = async (gameId) => {
   const numGameId = Number(gameId);
   const colors = ['red', 'blue', 'yellow', 'green'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
   const randomValue = String(Math.floor(Math.random() * 10));
-  const newCard = await createCard({
+
+  return await createCard({
     color: randomColor,
     value: randomValue,
     gameId: numGameId,
-    location: 'discard', // Asegúrate de mapear este nuevo campo si tu DB lo requiere
-    discardOrder: 1
+    location: 'discard',
+    discardOrder: 1,
   });
-  return newCard;
-}
+};
 
 /**
  * Obtiene la carta superior del descarte.
  * Si no existe, la crea dinámicamente en ese instante.
  */
 export const getTopCard = async (id) => {
-  if (!id) throw new appError('ID is required', 400);
+  const result = await cardRules.validateGetTopCard({ id });
+  if (result.isErr()) return result;
 
-  const game = await GameRepository.findById(id);
-  if (!game) throw new appError('Game not found', 404);
-
+  const { game } = result.value;
   let topCard = await CardRepository.findTopDiscardByGameId(id);
 
-
   if (!topCard) {
-    topCard = await createInitCard(game.id);
+    const initResult = await createInitCard(game.id);
+    if (initResult.isErr()) return initResult;
+    topCard = initResult.value;
   }
 
-  return {
+  return Result.Ok({
     game_id: game.id,
-    top_card: formatCard(topCard)
-  };
+    top_card: formatCard(topCard),
+  });
 };

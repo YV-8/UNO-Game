@@ -1,327 +1,155 @@
-import CardRepository from '../../../dataAccess/repositories/cards.repository.js';
-import GameRepository from '../../../dataAccess/repositories/game.repository.js';
-import { formatCard } from '../../../helpers/unoDeck.js';
-import * as CardService from '../../../logic/services/cards.service.js';
+import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
+import * as PlayerService from '../../../logic/services/player.service.js';
 
-jest.mock('../../../dataAccess/repositories/cards.repository.js');
-jest.mock('../../../dataAccess/repositories/game.repository.js');
-jest.mock('../../../helpers/unoDeck.js');
+jest.mock('../../../dataAccess/repositories/player.repository.js');
 
-describe('CardService', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe('PlayerService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('getAllPlayers', () => {
+    it('should return all players', async () => {
+
+      const mockPlayers = [{ id: 1, username: 'moni' }, { id: 2, username: 'luigi' }];
+      PlayerRepository.findAll.mockResolvedValue(mockPlayers);
+      const result = await PlayerService.getAllPlayers();
+
+      expect(result).toEqual(mockPlayers);
+      expect(PlayerRepository.findAll).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getPlayerById', () => {
+    it('show throw error 400 dont pass id', async () => {
+      await expect(PlayerService.getPlayerById()).rejects.toMatchObject({
+        statusCode: 400,
+        message: 'ID is required',
+      });
     });
 
-    describe('getAllCards', () => {
-        it('should return all cards successfully', async () => {
-            // Arrange
-            const mockCards = [{ id: 1, color: 'green', value: '5' }];
-            CardRepository.findAll.mockResolvedValue(mockCards);
+    it('should call correct id', async () => {
+      const mockPlayers = [{ id: 1, username: 'Moni' }];
+      PlayerRepository.findById.mockResolvedValue(mockPlayers);
+      const result = await PlayerService.getPlayerById(1);
 
-            // Act
-            const result = await CardService.getAllCards();
+      expect(result).toEqual(mockPlayers);
+      expect(PlayerRepository.findById).toHaveBeenCalledWith(1);
+    });
+    it('should throw error 400 invalid email', async () => {
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
 
-            // Assert
-            expect(result).toEqual(mockCards);
-            expect(CardRepository.findAll).toHaveBeenCalledTimes(1);
-        });
+      await expect(
+        PlayerService.updatePlayer(1, { email: 'formato-invalido' })
+      ).rejects.toMatchObject({ statusCode: 400, message: 'Invalid email format' });
     });
 
-    describe('getCardById', () => {
-        it('debe retornar error 400 si no se pasa id', async () => {
-            await expect(CardService.getCardById()).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'ID is required',
-            });
-        });
+    it('should throw error 404 the game doesnt exist', async () => {
+      PlayerRepository.findById.mockResolvedValue(null);
 
-        it('debe retornar error 404 si la carta no existe', async () => {
-            // Arrange
-            CardRepository.findById.mockResolvedValue(null);
-
-            // Act & Assert
-            await expect(CardService.getCardById(99)).rejects.toMatchObject({
-                statusCode: 404,
-                message: 'Card not found',
-            });
-        });
-
-        it('debe retornar la carta si existe', async () => {
-            // Arrange
-            const mockCard = { id: 1, color: 'red', value: '5' };
-            CardRepository.findById.mockResolvedValue(mockCard);
-
-            // Act
-            const result = await CardService.getCardById(1);
-
-            // Assert
-            expect(result).toEqual(mockCard);
-        });
+      await expect(PlayerService.getPlayerById(99)).rejects.toMatchObject({
+        statusCode: 404,
+        message: 'Player not found',
+      });
     });
 
-    describe('createCard', () => {
-        it('debe retornar error 400 si falta color, value o gameId', async () => {
-            await expect(
-                CardService.createCard({ color: 'red', gameId: 1 })
-            ).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'color, value and gameId are required',
-            });
-        });
+    it('should return the game exist', async () => {
+      const mockPlayer = { id: 1, name: 'ale' };
+      PlayerRepository.findById.mockResolvedValue(mockPlayer);
 
-        it('debe retornar error 400 si el color no es válido', async () => {
-            await expect(
-                CardService.createCard({ color: 'purple', value: '5', gameId: 1 })
-            ).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'color must be one of: red, blue, yellow, green',
-            });
-        });
+      const result = await PlayerService.getPlayerById(1);
 
-        it('debe retornar error 404 si el juego referenciado no existe', async () => {
-            // Arrange
-            GameRepository.findById.mockResolvedValue(null);
-
-            // Act & Assert
-            await expect(
-                CardService.createCard({ color: 'red', value: '5', gameId: 999 })
-            ).rejects.toMatchObject({
-                statusCode: 404,
-                message: 'Referenced game does not exist',
-            });
-            expect(CardRepository.create).not.toHaveBeenCalled();
-        });
-
-        it('debe crear la carta con los valores por defecto si no se pasan location/discardOrder', async () => {
-            // Arrange
-            GameRepository.findById.mockResolvedValue({ id: 1 });
-            const createdCard = { id: 10, color: 'red', value: '5', gameId: 1, location: 'deck', discardOrder: null };
-            CardRepository.create.mockResolvedValue(createdCard);
-
-            // Act
-            const result = await CardService.createCard({ color: 'red', value: '5', gameId: 1 });
-
-            // Assert
-            expect(CardRepository.create).toHaveBeenCalledWith({
-                color: 'red',
-                value: '5',
-                gameId: 1,
-                location: 'deck',
-                discardOrder: null,
-            });
-            expect(result).toEqual(createdCard);
-        });
-
-        it('debe crear la carta con location y discardOrder personalizados', async () => {
-            // Arrange
-            GameRepository.findById.mockResolvedValue({ id: 1 });
-            CardRepository.create.mockResolvedValue({ id: 11, color: 'blue', value: '2', gameId: 1, location: 'discard', discardOrder: 3 });
-
-            // Act
-            await CardService.createCard({ color: 'blue', value: '2', gameId: 1, location: 'discard', discardOrder: 3 });
-
-            // Assert
-            expect(CardRepository.create).toHaveBeenCalledWith({
-                color: 'blue',
-                value: '2',
-                gameId: 1,
-                location: 'discard',
-                discardOrder: 3,
-            });
-        });
+      expect(result).toEqual(mockPlayer);
     });
 
-    describe('updateCard', () => {
-        it('Should throw error 404 if the card does not exist', async () => {
-            CardRepository.findById.mockResolvedValue(null);
+  });
 
-            await expect(CardService.updateCard(1, { color: 'red' })).rejects.toMatchObject({
-                statusCode: 404,
-                message: 'Card not found',
-            });
-        });
-
-        it('should throw error 404 invalid color', async () => {
-            CardRepository.findById.mockResolvedValue({ id: 1, color: 'red', value: '5', gameId: 1 });
-            await expect(CardService.updateCard(1, { color: 'purple' })).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'color must be one of: red, blue, yellow, green',
-            });
-        });
-
-        it('should throw error 404 the game Id doesnt exist', async () => {
-            const existingCard = { id: 1, color: 'red', value: '5', gameId: 1, location: 'deck', discardOrder: null };
-            CardRepository.findById.mockResolvedValue(existingCard);
-            GameRepository.findById.mockResolvedValue(null);
-
-            await expect(
-                CardService.updateCard(1, { gameId: 999 })
-            ).rejects.toMatchObject({
-                statusCode: 404,
-                message: 'Referenced game does not exist',
-            });
-            expect(CardRepository.update).not.toHaveBeenCalled();
-        });
+  describe('updatePlayer', () => {
+    it('should return error 404 game doesnt exist', async () => {
+      PlayerRepository.findById.mockResolvedValue(null);
+      await expect(PlayerService.updatePlayer(666, { username: 'Amore' })).rejects.toMatchObject({
+        statusCode: 404,
+        message: 'Player not found',
+      });
     });
 
-    it('should matain dont send previus values', async () => {
-        // Arrange
-        const existingCard = { id: 1, color: 'red', value: '5', gameId: 1, location: 'deck', discardOrder: null };
-        CardRepository.findById.mockResolvedValue(existingCard);
-        CardRepository.update.mockResolvedValue(existingCard);
+    it('should hashear the password it sent the update', async () => {
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com', password: 'oldHashedPass' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue({ ...existingPlayer, password: 'newHashedPass' });
 
-        // Act
-        await CardService.updateCard(1, {});
+      await PlayerService.updatePlayer(1, { password: 'newPlainPassword' });
 
-        // Assert
-        expect(CardRepository.update).toHaveBeenCalledWith(1, {
-            color: 'red',
-            value: '5',
-            gameId: 1,
-            location: 'deck',
-            discardOrder: null,
-        });
+      const calledWith = PlayerRepository.update.mock.calls[0][1];
+      expect(calledWith.password).toBeDefined();
+      expect(calledWith.password).not.toBe('newPlainPassword'); // nunca en texto plano
+      expect(typeof calledWith.password).toBe('string');
     });
 
-    it('Should change only the value sent', async () => {
-        // Arrange
-        const existingCard = { id: 1, color: 'red', value: '5', gameId: 1, location: 'deck', discardOrder: null };
-        CardRepository.findById.mockResolvedValue(existingCard);
-        CardRepository.update.mockResolvedValue({ ...existingCard, color: 'blue' });
+    it(' should dont recieve password if dont update it', async () => {
 
-        // Act
-        const result = await CardService.updateCard(1, { color: 'blue' });
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue(existingPlayer);
 
-        // Assert
-        expect(CardRepository.update).toHaveBeenCalledWith(1, {
-            color: 'blue',
-            value: '5',
-            gameId: 1,
-            location: 'deck',
-            discardOrder: null,
-        });
-        expect(result.color).toBe('blue');
+      await PlayerService.updatePlayer(1, { username: 'ale2' });
+
+      const calledWith = PlayerRepository.update.mock.calls[0][1];
+      expect(calledWith.password).toBeUndefined();
     });
-});
 
-describe('deleteCard', () => {
+
+    it('should retain the previous values ​​if no fields are sent', async () => {
+      const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue(existingPlayer);
+
+      const result = await PlayerService.updatePlayer(1, {});
+
+      expect(PlayerRepository.update).toHaveBeenCalledWith(1, {
+        username: 'ale',
+        email: 'ale@test.com',
+      });
+      expect(result).toEqual(existingPlayer);
+    });
+
+    it('should update only the fields sent', async () => {
+      const existingPlayer = { id: 1, username: 'mario', email: 'mario@test.com' };
+      PlayerRepository.findById.mockResolvedValue(existingPlayer);
+      PlayerRepository.update.mockResolvedValue({ ...existingPlayer, username: 'marciano' });
+      const result = await PlayerService.updatePlayer(1, { username: 'marciano' });
+
+      expect(PlayerRepository.update).toHaveBeenCalledWith(1, {
+        username: 'marciano',
+        email: 'mario@test.com',
+      });
+      expect(result.username).toBe('marciano');
+    });
+  });
+
+  describe('deletePlayer', () => {
     it('should return error 400 dont pass id', async () => {
-        await expect(CardService.deleteCard()).rejects.toMatchObject({
-            statusCode: 400,
-            message: 'ID is required',
-        });
+      await expect(PlayerService.deletePlayer()).rejects.toMatchObject({
+        statusCode: 400,
+        message: 'ID is required',
+      });
     });
 
-    it('should return  error 404 doesnt exist card', async () => {
-
-        CardRepository.delete.mockResolvedValue(false);
-
-        await expect(CardService.deleteCard(99)).rejects.toMatchObject({
-            statusCode: 404,
-            message: 'Card not found',
-        });
+    it('should return error 404 id exist', async () => {
+      PlayerRepository.delete.mockResolvedValue(false);
+      await expect(PlayerService.deletePlayer(1)).rejects.toMatchObject({
+        statusCode: 404,
+        message: 'Player not found',
+      });
     });
 
-    it('should return the correct card', async () => {
+    it('should delete the player', async () => {
+      PlayerRepository.delete.mockResolvedValue(true);
+      const result = await PlayerService.deletePlayer(1);
 
-        CardRepository.delete.mockResolvedValue(true);
-        const result = await CardService.deleteCard(1);
-
-        expect(result).toEqual({});
-        expect(CardRepository.delete).toHaveBeenCalledWith(1);
+      expect(result).toEqual({});
+      expect(PlayerRepository.delete).toHaveBeenCalledWith(1);
     });
+  });
 });
-
-describe('createInitCard', () => {
-    it('should create a initial leter  for discard with color and value randoms', async () => {
-        // Arrange
-        GameRepository.findById.mockResolvedValue({ id: 1 });
-        const createdCard = { id: 50, color: 'yellow', value: '3', gameId: 1, location: 'discard', discardOrder: 1 };
-        CardRepository.create.mockResolvedValue(createdCard);
-        jest.spyOn(Math, 'random')
-            .mockReturnValueOnce(0.5) // para elegir color: índice 2 -> 'yellow' (0,1,2,3 -> red,blue,yellow,green)
-            .mockReturnValueOnce(0.3); // para el value
-
-        // Act
-        const result = await CardService.createInitCard(1);
-
-        // Assert
-        expect(CardRepository.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                gameId: 1,
-                location: 'discard',
-                discardOrder: 1,
-            })
-        );
-        expect(result).toEqual(createdCard);
-
-        Math.random.mockRestore();
-    });
-
-    it('should return error 404 doesnt existe te game', async () => {
-        // Arrange
-        GameRepository.findById.mockResolvedValue(null);
-
-        // Act & Assert
-        await expect(CardService.createInitCard(999)).rejects.toMatchObject({
-            statusCode: 404,
-            message: 'Referenced game does not exist',
-        });
-    });
-});
-
-describe('getTopCard', () => {
-    it('should return error 400 dont pass id', async () => {
-        await expect(CardService.getTopCard()).rejects.toMatchObject({
-            statusCode: 400,
-            message: 'ID is required',
-        });
-    });
-
-    it('should return  error 404 the game don exist', async () => {
-        // Arrange
-        GameRepository.findById.mockResolvedValue(null);
-
-        // Act & Assert
-        await expect(CardService.getTopCard(999)).rejects.toMatchObject({
-            statusCode: 404,
-            message: 'Game not found',
-        });
-    });
-
-    it('should return the leeter if exist in the discard ', async () => {
-        // Arrange
-        const mockGame = { id: 1 };
-        const mockTopCard = { id: 5, color: 'red', value: '7' };
-        GameRepository.findById.mockResolvedValue(mockGame);
-        CardRepository.findTopDiscardByGameId.mockResolvedValue(mockTopCard);
-        formatCard.mockReturnValue({ display: 'Red 7' });
-
-        // Act
-        const result = await CardService.getTopCard(1);
-
-        // Assert
-        expect(CardRepository.findTopDiscardByGameId).toHaveBeenCalledWith(1);
-        expect(formatCard).toHaveBeenCalledWith(mockTopCard);
-        expect(result).toEqual({ game_id: 1, top_card: { display: 'Red 7' } });
-    });
-
-    it('should create the initial create dont exist anything in discard', async () => {
-        // Arrange
-        const mockGame = { id: 1 };
-        GameRepository.findById.mockResolvedValue(mockGame); // se llama 2 veces: getTopCard y createCard (vía createInitCard)
-        CardRepository.findTopDiscardByGameId.mockResolvedValue(null);
-        const generatedCard = { id: 99, color: 'green', value: '4', gameId: 1, location: 'discard', discardOrder: 1 };
-        CardRepository.create.mockResolvedValue(generatedCard);
-        formatCard.mockReturnValue({ display: 'Green 4' });
-
-        // Act
-        const result = await CardService.getTopCard(1);
-
-        // Assert
-        expect(CardRepository.create).toHaveBeenCalledTimes(1);
-        expect(formatCard).toHaveBeenCalledWith(generatedCard);
-        expect(result).toEqual({ game_id: 1, top_card: { display: 'Green 4' } });
-    });
-});
-

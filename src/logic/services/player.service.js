@@ -1,51 +1,43 @@
-import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import { appError } from '../../middlewares/appError.js';
 import bcrypt from 'bcryptjs';
+import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
+import Result from '../monads/result.js';
+import * as playerRules from '../validators/playerRules.js';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_ROUNDS = 10;
 
 export const getAllPlayers = async () => {
-  return await PlayerRepository.findAll();
+  const players = await PlayerRepository.findAll();
+  return Result.Ok(players);
 };
 
 export const getPlayerById = async (id) => {
-  if (!id) {
-    throw new appError('ID is required', 400);
-  }
-
-  const player = await PlayerRepository.findById(id);
-  if (!player) {
-    throw new appError('Player not found', 404);
-  }
-  return player;
+  const result = await playerRules.validateGetPlayer({ id });
+  if (result.isErr()) return result;
+  return Result.Ok(result.value.player);
 };
 
 export const updatePlayer = async (id, data) => {
-  const player = await PlayerRepository.findById(id);
-  if (!player) throw new appError('Player not found', 404);
+  const result = await playerRules.validateUpdatePlayer({ id, ...data });
+  if (result.isErr()) return result;
 
-  const { username, email, password } = data;
-
-  if (email !== undefined && !EMAIL_REGEX.test(email)) {
-    throw new appError('Invalid email format', 400);
-  }
-
+  const { player, username, email, password } = result.value;
   const updatedData = {
     username: username ?? player.username,
-    email: email ?? player.email
+    email: email ?? player.email,
   };
   if (password) {
     updatedData.password = await bcrypt.hash(password, SALT_ROUNDS);
   }
 
-  return await PlayerRepository.update(id, updatedData);
+  const updatedPlayer = await PlayerRepository.update(id, updatedData);
+  return Result.Ok(updatedPlayer);
 };
 
 export const deletePlayer = async (id) => {
-  if (!id) throw new appError('ID is required', 400);
+  const result = await playerRules.validateDeletePlayer({ id });
+  if (result.isErr()) return result;
 
   const deleted = await PlayerRepository.delete(id);
-  if (!deleted) throw new appError('Player not found', 404);
-  return {};
+  if (!deleted) return Result.Err({ statusCode: 404, message: 'Player not found' });
+  return Result.Ok({});
 };
