@@ -1,7 +1,7 @@
 import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
 import * as AuthService from '../../../logic/services/auth.service.js';
-import { verifyAccessToken } from '../../../helpers/verifyToken.js';
-import { addToBlacklist } from '../../../helpers/tokenBlacklist.js';
+import { verifyAccessToken } from '../../../middlewares/verifyToken.js';
+import { addToBlacklist } from '../../../middlewares/tokenBlacklist.js';
 import { appError } from '../../../middlewares/appError.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';

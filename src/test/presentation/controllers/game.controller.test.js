@@ -1,6 +1,6 @@
 import * as GameController from '../../../presentation/controllers/game.controller.js';
 import * as GameService from '../../../logic/services/game.service.js';
-import { sendSuccess } from '../../../helpers/responseHandler.middleware.js';
+import { sendSuccess } from '../../../middlewares/responseHandler.middleware.js';
 import { mockRequest, mockResponse, mockNext } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/game.service.js');
@@ -37,7 +37,7 @@ describe('GameController', () => {
     });
 
     describe('getGameById', () => {
-        it('debe tomar el id de req.params y responder con el juego', async () => {
+        it('should return id => req.params and answer the game', async () => {
 
             const req = mockRequest({ params: { id: '5' } });
             const mockGame = { id: 5, name: 'Partida' };
@@ -49,7 +49,7 @@ describe('GameController', () => {
             expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game retrieved successfully', mockGame);
         });
 
-        it('debe llamar a next(error) si el juego no existe', async () => {
+        it('should call a next(error) if the game doesnt exist', async () => {
             const req = mockRequest({ params: { id: '999' } });
             const error = { statusCode: 404, message: 'game not found' };
             GameService.getGameById.mockRejectedValue(error);
@@ -61,7 +61,7 @@ describe('GameController', () => {
     });
 
     describe('createGame', () => {
-        it('debe convertir access_token (snake_case) a accessToken y llamar al service', async () => {
+        it('should convert access_token to accessToken and call to service', async () => {
             const req = mockRequest({
                 body: { name: 'Partida', rules: 'std', access_token: 'token123' },
             });
@@ -78,7 +78,7 @@ describe('GameController', () => {
             expect(sendSuccess).toHaveBeenCalledWith(res, 201, 'Game created successfully', createdGame);
         });
 
-        it('debe llamar a next(error) si falta el token', async () => {
+        it('should call to next(error) if failure token', async () => {
             const req = mockRequest({ body: { name: 'Partida' } });
             const error = { statusCode: 400, message: 'access_token is required' };
             GameService.createGame.mockRejectedValue(error);
@@ -89,7 +89,7 @@ describe('GameController', () => {
     });
 
     describe('updateGame', () => {
-        it('debe separar access_token del resto del body y pasar el resto como data', async () => {
+        it('should separate the access_token from the rest of the body and pass the rest as data', async () => {
 
             const req = mockRequest({
                 params: { id: '1' },
@@ -110,7 +110,7 @@ describe('GameController', () => {
     });
 
     describe('deleteGame', () => {
-        it('debe eliminar el juego usando el id de params', async () => {
+        it('should delete the game using the params id', async () => {
             const req = mockRequest({ params: { id: '1' } });
             GameService.deleteGame.mockResolvedValue({});
 
@@ -135,7 +135,7 @@ describe('GameController', () => {
     });
 
     describe('join', () => {
-        it('debe convertir game_id a número y separar el access_token', async () => {
+        it('should convert game_id to a number and separate the access_token', async () => {
 
             const req = mockRequest({ body: { game_id: '1', access_token: 'token123' } });
             GameService.joinGame.mockResolvedValue({});
@@ -147,7 +147,7 @@ describe('GameController', () => {
     });
 
     describe('startGame', () => {
-        it('debe pasar game_id y access_token directo del body', async () => {
+        it('should pass game_id and access_token directly from the body', async () => {
 
             const req = mockRequest({ body: { game_id: 1, access_token: 'token123' } });
             GameService.startGame.mockResolvedValue({});

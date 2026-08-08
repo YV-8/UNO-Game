@@ -70,7 +70,7 @@ describe('GameService', () => {
             });
         });
 
-        it('debe lanzar error 400 si el nombre ya está registrado', async () => {
+        it('should return error 400 if the name had already register', async () => {
             verifyAccessToken.mockReturnValue({
                 id: 1,
                 username: 'moni'

@@ -2,13 +2,13 @@
   "name": "capstone-uno",
   "version": "1.0.0",
   "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --watchAll",
     "test:ci": "cross-env NODE_ENV=test jest --runInBand",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage --runInBand",
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
   },
   "repository": {
     "type": "git",
