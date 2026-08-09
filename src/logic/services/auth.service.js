@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
 import Result from '../monads/result.js';
-import { addToBlacklist } from '../../helpers/tokenBlacklist.js';
+import { addToBlacklist } from '../../middlewares/tokenBlacklist.js';
 import * as authRules from '../validators/authRules.js';
 
 const SALT_ROUNDS = 10;
@@ -15,7 +15,7 @@ export const register = async ({ username, email, password }) => {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const player = await PlayerRepository.create({ username, email, password: hashedPassword });
 
-    return Result.Ok({ id: player.id, username: player.username, email: player.email });
+    return Result.Ok({message: 'User registered successfully'});
 };
 
 export const login = async ({ username, password }) => {

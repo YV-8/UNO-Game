@@ -11,10 +11,6 @@ export const authenticate = (req, res, next) => {
 
         const token = authHeader.split(' ')[1];
 
-        if (isBlacklisted(token)) {
-            throw new appError('Token has been invalidated', 401);
-        }
-
         const decoded = verifyAccessToken(token);
         req.player = decoded;
         req.token = token;

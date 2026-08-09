@@ -1,4 +1,4 @@
-import { composeAsyncValidators } from '../../utils/composeValidators/composeAsyncValidators.js';
+import { composeAsyncValidators } from '../../helpers/composeAsyncValidators.js';
 import * as playerValidator from './playerValidator.js';
 
 export const validateGetPlayer = composeAsyncValidators(

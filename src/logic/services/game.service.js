@@ -33,7 +33,7 @@ export const createGame = async ({ name, rules, playerId }) => {
         creatorId: playerId,
         state: 'waiting',
     });
-    return Result.Ok(game);
+    return Result.Ok({ message: 'Game created successfully', game_id: game.id});
 };
 
 export const updateGame = async (gameId, data, playerId) => {
@@ -46,14 +46,14 @@ export const updateGame = async (gameId, data, playerId) => {
         rules: rules ?? game.rules,
         state: state ?? game.state,
     });
-    return Result.Ok(updatedGame);
+    return Result.Ok({ message: 'Game updated successfully', game_id: game.id});
 };
 
 export const deleteGame = async (id) => {
     if (!id) return Result.Err({ statusCode: 400, message: 'ID is required' });
     const deleted = await GameRepository.delete(id);
     if (!deleted) return Result.Err({ statusCode: 404, message: 'Game not found' });
-    return Result.Ok({});
+    return Result.Ok({message: 'Game delete successfully'});
 };
 
 export const getGameState = async (id) => {

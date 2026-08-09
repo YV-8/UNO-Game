@@ -1,6 +1,6 @@
-import Result from '../../logic/monads/result.js';
+import Result from '../logic/monads/result.js';
 
-export const composeAsyncValidatiors =
+export const composeAsyncValidators =
 (...validators) =>
     async(data) =>{
         const result = await validators.reduce(

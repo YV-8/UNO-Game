@@ -1,7 +1,7 @@
 import CardRepository from '../../dataAccess/repositories/cards.repository.js';
 import Result from '../monads/result.js';
 import { formatCard } from '../../helpers/unoDeck.js';
-import * as cardRules from '../validators/cardRules.js';
+import * as cardRules from '../validators/cardsRules.js';
 
 export const getAllCards = async () => {
   const cards = await CardRepository.findAll();
