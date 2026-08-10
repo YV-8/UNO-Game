@@ -30,6 +30,7 @@ The project follows a layered architecture (Data Access / Logic / Presentation):
 
 ```
 capstone-uno/
+├── coverage/
 ├── node_modules/
 ├── src/
 │   ├── dataAccess/
@@ -48,17 +49,29 @@ capstone-uno/
 │   │   │   └── score.repository.js
 │   │   └── database.js
 │   ├── helpers/
-│   │   ├── responseHandle.middleware.js
-│   │   ├── tokenBlacklist.js
-│   │   ├── unoDeck.js
-│   │   └── responseHandler.middleware.js
+│   │   ├── composeAsyncValidators.js
+│   │   ├── handleResult.js
+│   │   └── unoDeck.js
 │   ├── logic/
-│   │   └── services/
-│   │       ├── auth.service.js
-│   │       ├── cards.service.js
-│   │       ├── game.service.js
-│   │       ├── player.service.js
-│   │       └── score.service.js
+│   │   ├── monads/
+│   │   │   └── result.js
+│   │   ├── services/
+│   │   │   ├── auth.service.js
+│   │   │   ├── cards.service.js
+│   │   │   ├── game.service.js
+│   │   │   ├── player.service.js
+│   │   │   └── score.service.js
+│   │   └── validators/
+│   │       ├── authRules.js
+│   │       ├── authValidator.js
+│   │       ├── cardsRules.js
+│   │       ├── cardValidator.js
+│   │       ├── gameRules.js
+│   │       ├── gameValidator.js
+│   │       ├── playerRules.js
+│   │       ├── playerValidator.js
+│   │       ├── scoreRules.js
+│   │       └── scoreValidator.js
 │   ├── middlewares/
 │   │   ├── appError.js
 │   │   ├── auth.middleware.js
@@ -80,7 +93,9 @@ capstone-uno/
 ├── package.json
 ├── README.md
 └── server.js
+
 ```
+
 - **dataAccess:** Sequelize models and repositories (data access layer).
 - **logic/services:** business logic.
 - **presentation:** controllers and routes (HTTP layer).
@@ -205,6 +220,10 @@ To test all the endpoints, import the Postman collection:
 | POST | `/api/games` |
 | PUT | `/api/games` |
 | DELETE | `/api/games` |
+| POSTSTATE | `/api/games/state` |
+| POSTPLAERS | `/api/games/players` |
+| POSTCurrent-Players | `/api/games/current-players` |
+
 
 **Cards**
 | Method | Endpoint |
@@ -214,6 +233,7 @@ To test all the endpoints, import the Postman collection:
 | POST | `/api/cards` |
 | PUT | `/api/cards/:id` |
 | DELETE | `/api/cards/:id` |
+| GET | `/api/games/top-card` |
 
 **Scores**
 | Method | Endpoint |
@@ -224,7 +244,9 @@ To test all the endpoints, import the Postman collection:
 | PUT | `/api/scores/:id` |
 | DELETE | `/api/scores/:id` |
 
+### Important Details about the poryect:
+
 ---
 
-<p align="center"> Made with 💛 for the Capstone UNO project</p>
+<p align="center"> Made with love, saliva, sweat, duct tape and lots of saliva for the Capstone UNO project.</p>
 ---
