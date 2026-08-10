@@ -194,13 +194,11 @@ Go to the following address in your browser or HTTP client:
 ```
 http://localhost:3000/api
 ```
-
-###  Postman collection
-
-To test all the endpoints, import the Postman collection:
-
-1. Download the collection file: [https://drive.google.com/file/d/1RirRrmNWYDLWZgogkSZHpwcN2vrQdTax/view?usp=sharing]
+# Postman collection
+1. Download the collection file: [https://drive.google.com/drive/folders/1UjeMDE55NhjNVnOP0tAGAKIAeFnU9GBA?usp=sharing]
 2. Open Postman → **Export** → paste the link or select the downloaded file.
+
+
 ###  Available endpoints
 
 **Players**
