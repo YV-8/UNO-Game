@@ -248,6 +248,8 @@ http://localhost:3000/api
 
 * **Security & Authentication:** To create a game and perform authentication, an `access_token` is strictly required. This ensures enhanced game security, protects players' data, and provides better access management across all operations.
 ---
+## Coverage
+![alt text](image.png)
 
 <p align="center"> Made with love, saliva, sweat, duct tape and lots of saliva for the Capstone UNO project.</p>
 ---
