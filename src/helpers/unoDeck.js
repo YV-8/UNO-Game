@@ -7,6 +7,7 @@ const WILD_VALUES = ['wild', 'wild_draw_four'];
 // 1-9: 2 por color (72)
 // skip/reverse/draw_two: 2 por color (24)
 // wild/wild_draw_four: 4 de cada uno (8) = 108 cartas
+// add wild
 //mayusculas == enums
 export const buildDeck = () => {
     const deck = [];

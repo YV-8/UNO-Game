@@ -23,7 +23,7 @@ export const getGameById = async (id) => {
     return Result.Ok(game);
 };
 
-export const createGame = async ({ name, rules, playerId }) => {
+export const createGame = async ({ name, rules, playerId,username }) => {
     const result = await gameRules.validateCreateGame({ name, rules, playerId });
     if (result.isErr()) return result;
 
@@ -32,6 +32,14 @@ export const createGame = async ({ name, rules, playerId }) => {
         rules,
         creatorId: playerId,
         state: 'waiting',
+    });
+
+    await GamePlayerRepository.create({
+        gameId: game.id,
+        playerId,
+        username,
+        turnOrder: 1,
+        hasLeft: false,
     });
     return Result.Ok({ message: 'Game created successfully', game_id: game.id});
 };

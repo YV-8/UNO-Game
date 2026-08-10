@@ -242,8 +242,11 @@ http://localhost:3000/api
 | PUT | `/api/scores/:id` |
 | DELETE | `/api/scores/:id` |
 
-### Important Details about the poryect:
+### Important Details about the poryect
 
+* **Note on the Card Deck:** The deck is not generated when a game is created (`POST /api/games`). The first discard card is created lazily the first time `GET .../top-card` is requested: if `getTopCard` finds no card in `discard` for that `gameId`, `createInitCard` generates one on the fly with a random color and value (0–9). `helpers/unoDeck.js` already includes `buildDeck` (the full 108-card deck: numbers, `skip`/`reverse`/`draw_two`, wilds) and `shuffleDeck` (Fisher-Yates), intended for a future iteration where the full deck is generated and dealt automatically when the game is created, instead of creating cards one at a time.
+
+* **Security & Authentication:** To create a game and perform authentication, an `access_token` is strictly required. This ensures enhanced game security, protects players' data, and provides better access management across all operations.
 ---
 
 <p align="center"> Made with love, saliva, sweat, duct tape and lots of saliva for the Capstone UNO project.</p>

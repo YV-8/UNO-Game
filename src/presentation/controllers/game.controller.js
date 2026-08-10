@@ -13,9 +13,9 @@ export const getGameById = async (req, res) => {
 
 export const createGame = async (req, res) => {
   const { name, rules } = req.body;
-  const playerId = req.player.id;
+  const { id: playerId, username } = req.player;
   const result = await GameService.createGame(
-    { name, rules, playerId });
+    { name, rules, playerId, username });
   return handleResult(res, result, 201);
 };
 
