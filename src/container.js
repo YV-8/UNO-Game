@@ -1,33 +1,33 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import Result from './logic/monads/respond.js';
 
-import PlayerRepository from './dataAccess/repositories/player.repository.js';
-import GameRepository from './dataAccess/repositories/game.repository.js';
-import GamePlayerRepository from './dataAccess/repositories/gamePlayer.repository.js';
-import CardRepository from './dataAccess/repositories/cards.repository.js';
-import ScoreRepository from './dataAccess/repositories/score.repository.js';
+import playerRepository from './dataAccess/repositories/player.repository.js';
+import gameRepository from './dataAccess/repositories/game.repository.js';
+import gamePlayerRepository from './dataAccess/repositories/gamePlayer.repository.js';
+import cardRepository from './dataAccess/repositories/cards.repository.js';
+import scoreRepository from './dataAccess/repositories/score.repository.js';
 
 import { addToBlacklist } from './middlewares/tokenBlacklist.js';
 import { formatCard } from './helpers/unoDeck.js';
+import respond from './logic/monads/respond.js';
 
-import { createAuthValidator } from './logic/validators/authValidator.js';
-import { createPlayerValidator } from './logic/validators/playerValidator.js';
-import { createGameValidator } from './logic/validators/gameValidator.js';
-import { createCardValidator } from './logic/validators/cardValidator.js';
-import { createScoreValidator } from './logic/validators/scoreValidator.js';
+import { authValidator } from './logic/validators/authValidator.js';
+import { playerValidator } from './logic/validators/playerValidator.js';
+import { gameValidator } from './logic/validators/gameValidator.js';
+import { cardValidator } from './logic/validators/cardValidator.js';
+import { scoreValidator } from './logic/validators/scoreValidator.js';
 
-import { createAuthRules } from './logic/validators/authRules.js';
-import { createPlayerRules } from './logic/validators/playerRules.js';
-import { createGameRules } from './logic/validators/gameRules.js';
-import { createCardRules } from './logic/validators/cardsRules.js';
-import { createScoreRules } from './logic/validators/scoreRules.js';
+import { authRules } from './logic/validators/authRules.js';
+import { playerRules } from './logic/validators/playerRules.js';
+import { gameRules } from './logic/validators/gameRules.js';
+import { cardRules } from './logic/validators/cardRules.js';
+import { scoreRules } from './logic/validators/scoreRules.js';
 
-import { createAuthService } from './logic/services/auth.service.js';
-import { createPlayerService } from './logic/services/player.service.js';
-import { createGameService } from './logic/services/game.service.js';
-import { createCardService } from './logic/services/cards.service.js';
-import { createScoreService } from './logic/services/score.service.js';
+import { authService as createAuthService } from './logic/services/auth.service.js';
+import { playerService as createPlayerService } from './logic/services/player.service.js';
+import { gameService as createGameService } from './logic/services/game.service.js';
+import { cardService as createCardService } from './logic/services/cards.service.js';
+import { scoreService as createScoreService } from './logic/services/score.service.js';
 
 
 const hashProvider = {
@@ -41,73 +41,72 @@ const tokenProvider = {
 };
 
 // Auth
-const authValidator = createAuthValidator({ playerRepository: PlayerRepository, hashProvider });
-const authRules = createAuthRules(authValidator);
+const builtAuthValidator = authValidator({ playerRepository, hashProvider });
+const builtAuthRules = authRules(builtAuthValidator);
 
 export const authService = createAuthService({
-    playerRepository: PlayerRepository,
-    authRules,
+    playerRepository,
+    authRules: builtAuthRules,
     hashProvider,
     tokenProvider,
     blacklist: { add: addToBlacklist },
     config: {
         saltRounds: 10,
         jwtSecret: process.env.JWT_SECRET,
-        jwtExpiresIn: process.env.JWT_EXPIRES_IN || '3h',
+        jwtExpiresIn: process.env.JWT_EXPIRES_IN,
     },
-    Result,
+    respond,
 });
-
 // Player
-const playerValidator = createPlayerValidator({ playerRepository: PlayerRepository });
-const playerRules = createPlayerRules(playerValidator);
+const builtPlayerValidator = playerValidator({ playerRepository });
+const builtPlayerRules = playerRules(builtPlayerValidator);
 
 export const playerService = createPlayerService({
-    playerRepository: PlayerRepository,
-    playerRules,
+    playerRepository,
+    playerRules: builtPlayerRules,
     hashProvider,
     config: { saltRounds: 10 },
-    Result,
+    respond,
 });
 
-//Game
-const gameValidator = createGameValidator({
-    gameRepository: GameRepository,
-    gamePlayerRepository: GamePlayerRepository,
+// Game
+const builtGameValidator = gameValidator({
+    gameRepository,
+    gamePlayerRepository,
 });
-const gameRules = createGameRules(gameValidator);
+const builtGameRules = gameRules(builtGameValidator);
 
 export const gameService = createGameService({
-    gameRepository: GameRepository,
-    gamePlayerRepository: GamePlayerRepository,
-    gameRules,
-    Result,
+    gameRepository,
+    gamePlayerRepository,
+    gameRules: builtGameRules,
+    respond,
 });
 
 // Cards
-const cardValidator = createCardValidator({
-    cardRepository: CardRepository,
-    gameRepository: GameRepository,
+const builtCardValidator = cardValidator({
+    cardRepository,
+    gameRepository,
 });
-const cardRules = createCardRules(cardValidator);
+const builtCardRules = cardRules(builtCardValidator);
 
 export const cardService = createCardService({
-    cardRepository: CardRepository,
-    cardRules,
+    cardRepository,
+    cardRules: builtCardRules,
     formatCard,
-    Result,
+    respond,
 });
 
-//Score
-const scoreValidator = createScoreValidator({
-    scoreRepository: ScoreRepository,
-    playerRepository: PlayerRepository,
-    gameRepository: GameRepository,
+// Score
+const builtScoreValidator = scoreValidator({
+    scoreRepository,
+    playerRepository,
+    gameRepository,
 });
-const scoreRules = createScoreRules(scoreValidator);
+const builtScoreRules = scoreRules(builtScoreValidator);
 
 export const scoreService = createScoreService({
-    scoreRepository: ScoreRepository,
-    scoreRules,
-    Result,
+    scoreRepository,
+    scoreRules: builtScoreRules,
+    respond,
 });
