@@ -1,6 +1,6 @@
 import * as AuthController from '../../../presentation/controllers/auth.controller.js';
 import * as AuthService from '../../../logic/services/auth.service.js';
-import Result from '../../../logic/monads/result.js';
+import Result from '../../../logic/monads/respond.js';
 import { mockRequest, mockResponse } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/auth.service.js');

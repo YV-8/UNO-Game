@@ -1,6 +1,6 @@
 import * as ScoreController from '../../../presentation/controllers/score.controller.js';
 import * as ScoreService from '../../../logic/services/score.service.js';
-import Result from '../../../logic/monads/result.js';
+import Result from '../../../logic/monads/respond.js';
 import { mockRequest, mockResponse } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/score.service.js');

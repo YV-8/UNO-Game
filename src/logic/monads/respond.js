@@ -3,6 +3,7 @@
 const Result = {
     Ok: (value) => ({
         map: (fn) => Result.Ok(fn(value)),
+        chain: (fn) => fn(value),
         mapErr: () => Result.Ok(value),
         value,
         error: null,
@@ -12,6 +13,7 @@ const Result = {
     // Envuelve un fallo (típicamente { statusCode, message })
     Err: (error) => ({
         map: () => Result.Err(error),
+        chain: () => Result.Err(error),
         mapErr: (fn) => Result.Err(fn(error)),
         value: null,
         error,

@@ -1,5 +1,5 @@
 import ScoreRepository from '../../dataAccess/repositories/score.repository.js';
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import * as scoreRules from '../validators/scoreRules.js';
 
 export const getAllScores = async () => {

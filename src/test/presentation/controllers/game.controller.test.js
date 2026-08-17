@@ -1,6 +1,6 @@
 import * as GameController from '../../../presentation/controllers/game.controller.js';
 import * as GameService from '../../../logic/services/game.service.js';
-import Result from '../../../logic/monads/result.js';
+import Result from '../../../logic/monads/respond.js';
 import { mockRequest, mockResponse } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/game.service.js');

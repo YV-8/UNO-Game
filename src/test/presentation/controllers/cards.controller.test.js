@@ -1,6 +1,6 @@
 import * as CardController from '../../../presentation/controllers/cards.controller.js';
 import * as CardService from '../../../logic/services/cards.service.js';
-import Result from '../../../logic/monads/result.js';
+import Result from '../../../logic/monads/respond.js';
 import { mockRequest, mockResponse } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/cards.service.js');

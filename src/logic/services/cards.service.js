@@ -1,5 +1,5 @@
 import CardRepository from '../../dataAccess/repositories/cards.repository.js';
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import { formatCard } from '../../helpers/unoDeck.js';
 import * as cardRules from '../validators/cardsRules.js';
 

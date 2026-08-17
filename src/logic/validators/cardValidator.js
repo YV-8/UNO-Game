@@ -1,4 +1,4 @@
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import CardRepository from '../../dataAccess/repositories/cards.repository.js';
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
 

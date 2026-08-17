@@ -1,4 +1,4 @@
-import Result from '../logic/monads/result.js';
+import Result from '../logic/monads/respond.js';
 /**Encadena validadores async en un solo pipeline.
  * Cada validador recibe la data acumula -> da un Result
  * - Si alguno devuelve Err,
@@ -10,18 +10,20 @@ import Result from '../logic/monads/result.js';
  * validateScoreExists agrega `existingScore`, y el siguiente paso
  * de validateUpdateScore puede leerlo
 */
-export const composeAsyncValidators =
-(...validators) =>
-    async(data) =>{
-        const result = await validators.reduce(
-            async(accPromise, validator) =>{
+export const composeAsyncValidators = (...validators) => {
+    return (data) => {
+        return validators.reduce(
+            async (accPromise, validator) => {
                 const acc = await accPromise;
-                if(acc.isErr()) return acc;
+                if (acc.isErr()) return acc;
 
                 const res = await validator(acc.value);
-                return res.isErr() ? res : Result.Ok({...acc.value, ...res.value});
+
+                return res.chain((resolvedValue) =>
+                    Result.Ok({ ...acc.value, ...resolvedValue })
+                );
             },
             Promise.resolve(Result.Ok(data))
         );
-        return result;
     };
+};

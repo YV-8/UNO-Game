@@ -1,10 +1,7 @@
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
 import GamePlayerRepository from '../../dataAccess/repositories/gamePlayer.repository.js';
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import * as gameRules from '../validators/gameRules.js';
-
-// const VALID_STATUSES = ['waiting', 'in_progress', 'finished'];
-// const CARDS_PER_PLAYER = 7;
 
 export const getAllGame = async () => {
     const games = await GameRepository.findAll();

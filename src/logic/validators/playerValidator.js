@@ -1,4 +1,4 @@
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

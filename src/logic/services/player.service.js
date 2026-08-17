@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import * as playerRules from '../validators/playerRules.js';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_ROUNDS = 10;

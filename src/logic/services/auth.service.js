@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import Result from '../monads/result.js';
+import Result from '../monads/respond.js';
 import { addToBlacklist } from '../../middlewares/tokenBlacklist.js';
 import * as authRules from '../validators/authRules.js';
 
