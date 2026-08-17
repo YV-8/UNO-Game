@@ -1,26 +1,29 @@
-import Result from '../monads/respond.js';
-import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
+import Respond from '../monads/respond.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const validateIdProvided = async (data) => {
-    if (!data.id) {
-        return Result.Err({ statusCode: 400, message: 'ID is required' });
-    }
-    return Result.Ok(data);
-};
+export const playerValidator = ({ playerRepository }) => ({
 
-export const validatePlayerExists = async (data) => {
-    const player = await PlayerRepository.findById(data.id);
-    if (!player) {
-        return Result.Err({ statusCode: 404, message: 'Player not found' });
-    }
-    return Result.Ok({ ...data, player });
-};
+    validateIdProvided: async (data) => {
+        if (!data.id) {
+            return Respond.Err({ statusCode: 400, message: 'ID is required' });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validateEmailFormatIfProvided = async (data) => {
-    if (data.email !== undefined && !EMAIL_REGEX.test(data.email)) {
-        return Result.Err({ statusCode: 400, message: 'Invalid email format' });
-    }
-    return Result.Ok(data);
-};
+    validatePlayerExists: async (data) => {
+        const player = await playerRepository.findById(data.id);
+        if (!player) {
+            return Respond.Err({ statusCode: 404, message: 'Player not found' });
+        }
+        return Respond.Ok({ ...data, player });
+    },
+
+    validateEmailFormatIfProvided: async (data) => {
+        if (data.email !== undefined && !EMAIL_REGEX.test(data.email)) {
+            return Respond.Err({ statusCode: 400, message: 'Invalid email format' });
+        }
+        return Respond.Ok(data);
+    },
+
+});

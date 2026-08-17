@@ -1,6 +1,6 @@
 import { composeAsyncValidators } from '../../helpers/composeAsyncValidators.js';
 
-export const createAuthRules = (authValidator) => ({
+export const authRules = (authValidator) => ({
 
     validateRegister: composeAsyncValidators(
         authValidator.validateRegisterFieldsProvided,
