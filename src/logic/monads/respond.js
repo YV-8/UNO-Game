@@ -10,7 +10,6 @@ const Result = {
         isOk: () => true,
         isErr: () => false,
     }),
-    // Envuelve un fallo (típicamente { statusCode, message })
     Err: (error) => ({
         map: () => Result.Err(error),
         chain: () => Result.Err(error),
