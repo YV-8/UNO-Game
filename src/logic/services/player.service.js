@@ -1,43 +1,41 @@
-import bcrypt from 'bcryptjs';
-import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import Result from '../monads/respond.js';
-import * as playerRules from '../validators/playerRules.js';
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SALT_ROUNDS = 10;
+export const playerService = ({ playerRepository, playerRules, hashProvider, config, respond }) => {
 
-export const getAllPlayers = async () => {
-  const players = await PlayerRepository.findAll();
-  return Result.Ok(players);
-};
-
-export const getPlayerById = async (id) => {
-  const result = await playerRules.validateGetPlayer({ id });
-  if (result.isErr()) return result;
-  return Result.Ok(result.value.player);
-};
-
-export const updatePlayer = async (id, data) => {
-  const result = await playerRules.validateUpdatePlayer({ id, ...data });
-  if (result.isErr()) return result;
-
-  const { player, username, email, password } = result.value;
-  const updatedData = {
-    username: username ?? player.username,
-    email: email ?? player.email,
+  const getAllPlayers = async () => {
+    const players = await playerRepository.findAll();
+    return respond.Ok(players);
   };
-  if (password) {
-    updatedData.password = await bcrypt.hash(password, SALT_ROUNDS);
-  }
 
-  const updatedPlayer = await PlayerRepository.update(id, updatedData);
-  return Result.Ok(updatedPlayer);
-};
+  const getPlayerById = async (id) => {
+    const validation = await playerRules.validateGetPlayer({ id });
+    if (validation.isErr()) return validation;
+    return respond.Ok(validation.value.player);
+  };
 
-export const deletePlayer = async (id) => {
-  const result = await playerRules.validateDeletePlayer({ id });
-  if (result.isErr()) return result;
+  const updatePlayer = async (id, data) => {
+    const validation = await playerRules.validateUpdatePlayer({ id, ...data });
+    if (validation.isErr()) return validation;
 
-  const deleted = await PlayerRepository.delete(id);
-  if (!deleted) return Result.Err({ statusCode: 404, message: 'Player not found' });
-  return Result.Ok({});
+    const { player, username, email, password } = validation.value;
+    const updatedData = {
+      username: username ?? player.username,
+      email: email ?? player.email,
+    };
+    if (password) {
+      updatedData.password = await hashProvider.hash(password, config.saltRounds);
+    }
+
+    const updatedPlayer = await playerRepository.update(id, updatedData);
+    return respond.Ok(updatedPlayer);
+  };
+
+  const deletePlayer = async (id) => {
+    const validation = await playerRules.validateDeletePlayer({ id });
+    if (validation.isErr()) return validation;
+
+    const deleted = await playerRepository.delete(id);
+    if (!deleted) return respond.Err({ statusCode: 404, message: 'Player not found' });
+    return respond.Ok({});
+  };
+
+  return { getAllPlayers, getPlayerById, updatePlayer, deletePlayer };
 };

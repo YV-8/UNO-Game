@@ -1,46 +1,47 @@
-import ScoreRepository from '../../dataAccess/repositories/score.repository.js';
-import Result from '../monads/respond.js';
-import * as scoreRules from '../validators/scoreRules.js';
+export const scoreService = ({ scoreRepository, scoreRules, validationresponde, hashProvider, tokenProvider, blacklist, config, respond }) => {
 
-export const getAllScores = async () => {
-    const scores = await ScoreRepository.findAll();
-    return Result.Ok(scores);
-};
-
-export const getScoreById = async (id) => {
-    const result = await scoreRules.validateGetScore({ id });
-    if (result.isErr()) return result;
-    return Result.Ok(result.value.existingScore);
-};
-
-export const createScore = async ({ playerId, gameId, score }) => {
-    const result = await scoreRules.validateCreateScore({ playerId, gameId, score });
-    if (result.isErr()) return result;
-
-    const createdScore = await ScoreRepository.create({ playerId, gameId, score });
-    return Result.Ok(createdScore);
-};
-
-export const updateScore = async (id, data) => {
-    const result = await scoreRules.validateUpdateScore({ id, ...data });
-    if (result.isErr()) return result;
-
-    const { existingScore, playerId, gameId, score } = result.value;
-    const updatedData = {
-        playerId: playerId ?? existingScore.playerId,
-        gameId: gameId ?? existingScore.gameId,
-        score: score ?? existingScore.score,
+    const getAllScores = async () => {
+        const scores = await scoreRepository.findAll();
+        return respond.Ok(scores);
     };
 
-    const updatedScore = await ScoreRepository.update(id, updatedData);
-    return Result.Ok(updatedScore);
-};
+    const getScoreById = async (id) => {
+        const validation = await scoreRules.validateGetScore({ id });
+        if (validation.isErr()) return validation;
+        return respond.Ok(result.value.existingScore);
+    };
 
-export const deleteScore = async (id) => {
-    const result = await scoreRules.validateDeleteScore({ id });
-    if (result.isErr()) return result;
+    const createScore = async ({ playerId, gameId, score }) => {
+        const validation = await scoreRules.validateCreateScore({ playerId, gameId, score });
+        if (validation.isErr()) return validation;
 
-    const deleted = await ScoreRepository.delete(id);
-    if (!deleted) return Result.Err({ statusCode: 404, message: 'Score not found' });
-    return Result.Ok({});
+        const createdScore = await scoreRepository.create({ playerId, gameId, score });
+        return respond.Ok(createdScore);
+    };
+
+    const updateScore = async (id, data) => {
+        const validation = await scoreRules.validateUpdateScore({ id, ...data });
+        if (validation.isErr()) return validation;
+
+        const { existingScore, playerId, gameId, score } = validation.value;
+        const updatedData = {
+            playerId: playerId ?? existingScore.playerId,
+            gameId: gameId ?? existingScore.gameId,
+            score: score ?? existingScore.score,
+        };
+
+        const updatedScore = await scoreRepository.update(id, updatedData);
+        return respond.Ok(updatedScore);
+    };
+
+    const deleteScore = async (id) => {
+        const validation = await scoreRules.validateDeleteScore({ id });
+        if (validation.isErr()) return validation;
+
+        const deleted = await scoreRepository.delete(id);
+        if (!deleted) return responde.Err({ statusCode: 404, message: 'Score not found' });
+        return respond.Ok({});
+    };
+
+    return { getAllScores, getScoreById, createScore, updateScore, deleteScore };
 };

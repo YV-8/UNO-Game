@@ -1,42 +1,42 @@
-export const createAuthService = ({
-    playerRepository, authRules, hashProvider, tokenProvider, blacklist, config, Result,
+export const authService = ({
+    playerRepository, authRules, hashProvider, tokenProvider, blacklist, config, respond,
 }) => {
 
     const register = async ({ username, email, password }) => {
-        const result = await authRules.validateRegister({ username, email, password });
-        if (result.isErr()) return result;
+        const validation = await authRules.validateRegister({ username, email, password });
+        if (validation.isErr()) return validation;
 
         const hashedPassword = await hashProvider.hash(password, config.saltRounds);
         await playerRepository.create({ username, email, password: hashedPassword });
 
-        return Result.Ok({ message: 'User registered successfully' });
+        return respond.Ok({ message: 'User registered successfully' });
     };
 
     const login = async ({ username, password }) => {
-        const result = await authRules.validateLogin({ username, password });
-        if (result.isErr()) return result;
+        const validation = await authRules.validateLogin({ username, password });
+        if (validation.isErr()) return validation;
 
-        const { player } = result.value;
+        const { player } = validation.value;
         const token = tokenProvider.sign(
             { id: player.id, username: player.username },
             config.jwtSecret,
             { expiresIn: config.jwtExpiresIn }
         );
 
-        return Result.Ok({ access_token: token });
+        return respond.Ok({ access_token: token });
     };
 
     const getProfile = async (playerId) => {
-        const result = await authRules.validateGetProfile({ playerId });
-        if (result.isErr()) return result;
+        const validation = await authRules.validateGetProfile({ playerId });
+        if (validation.isErr()) return validation;
 
-        const { player } = result.value;
-        return Result.Ok({ username: player.username, email: player.email });
+        const { player } = validation.value;
+        return respond.Ok({ username: player.username, email: player.email });
     };
 
     const logout = async (token) => {
         blacklist.add(token);
-        return Result.Ok({ message: 'User logged out successfully' });
+        return respond.Ok({ message: 'User logged out successfully' });
     };
 
     return { register, login, getProfile, logout };
