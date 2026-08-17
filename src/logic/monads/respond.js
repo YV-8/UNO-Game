@@ -1,19 +1,24 @@
-// Result monad: envuelve un valor que salió bien (Ok) o mal (Err),
-// para que services/validators devuelvan el resultado sin lanzar excepciones
-const Result = {
+/**
+ *Return a value => ok / err
+ * with the value  to pass "map, chain and mapErr"
+ * "chain  think fn = function get a result for its"
+ * in this case error:null for is a respond ok  for it;s isOk true or isError false
+ * in the other case de value:null  error create and isOk: false isErr: true
+ */
+const Respond = {
     Ok: (value) => ({
-        map: (fn) => Result.Ok(fn(value)),
+        map: (fn) => Respond.Ok(fn(value)),
         chain: (fn) => fn(value),
-        mapErr: () => Result.Ok(value),
+        mapErr: () => Respond.Ok(value),
         value,
         error: null,
         isOk: () => true,
         isErr: () => false,
     }),
     Err: (error) => ({
-        map: () => Result.Err(error),
-        chain: () => Result.Err(error),
-        mapErr: (fn) => Result.Err(fn(error)),
+        map: () => Respond.Err(error),
+        chain: () => Respond.Err(error),
+        mapErr: (fn) => Respond.Err(fn(error)),
         value: null,
         error,
         isOk: () => false,
@@ -21,4 +26,4 @@ const Result = {
     }),
 };
 
-export default Result;
+export default Respond;
