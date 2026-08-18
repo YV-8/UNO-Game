@@ -8,8 +8,9 @@ import cardRepository from './dataAccess/repositories/cards.repository.js';
 import scoreRepository from './dataAccess/repositories/score.repository.js';
 
 import { addToBlacklist } from './middlewares/tokenBlacklist.js';
-import { formatCard } from './helpers/unoDeck.js';
+import { shuffleDeck, formatCard } from './helpers/unoDeck.js';
 import respond from './logic/monads/respond.js';
+import registryRepository from './dataAccess/repositories/registry.repository.js';
 
 import { authValidator } from './logic/validators/authValidator.js';
 import { playerValidator } from './logic/validators/playerValidator.js';
@@ -28,7 +29,6 @@ import { playerService as createPlayerService } from './logic/services/player.se
 import { gameService as createGameService } from './logic/services/game.service.js';
 import { cardService as createCardService } from './logic/services/cards.service.js';
 import { scoreService as createScoreService } from './logic/services/score.service.js';
-
 
 const hashProvider = {
     hash: (plain, rounds) => bcrypt.hash(plain, rounds),
@@ -92,6 +92,9 @@ const builtCardRules = cardRules(builtCardValidator);
 
 export const cardService = createCardService({
     cardRepository,
+    gameRepository,
+    gamePlayerRepository,
+    registryRepository,
     cardRules: builtCardRules,
     formatCard,
     respond,
