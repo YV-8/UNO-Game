@@ -62,13 +62,19 @@ export const leave = async (req, res) => {
   return handleResult(res, result, 200);
 };
 
+export const getTopCard = async (req, res) => {
+    const id = Number(req.body?.game_id);
+    const result = await gameService.getTopCard(id);
+    return handleResult(res, result, 200);
+};
+
 /**
  * this case is very similar for getGameState getGamePLayers
  * getCUrrentPlayer getGameScores  user the const result use a promise await for the GameService
  * the same mod the other for req.body and is only get so don't change anything
- * @param {*} req 
- * @param {*} res 
- * @returns 
+ * @param {*} req
+ * @param {*} res
+ * @returns
  */
 
 export const getGameState = async (req, res) => {
@@ -89,4 +95,48 @@ export const getCurrentPlayer = async (req, res) => {
 export const getGameScores = async (req, res) => {
   const result = await gameService.getGameScores(Number(req.body?.game_id));
   return handleResult(res, result, 200);
+};
+
+export const playCard = async (req,res) => {
+const gameId = Number(req.params.id);
+const { cardPlayed, chosenColor } = req.body;
+  const { id: playerId } = req.player;
+  const result = await gameService.playCard({gameId, playerId,cardPlayedStr: cardPlayed, chosenColor});
+  return handleResult(res,result,200);
+};
+
+export const getMyHand = async (req, res) => {
+    const gameId = req.params.id;
+    const playerId = req.player.id;
+
+    const result = await gameService.getPlayerHand({ gameId, playerId });
+    if (result.isErr()) {
+        const { statusCode, message } = result.error;
+        return res.status(statusCode).json({ message });
+    }
+    return res.status(200).json(result.value);
+};
+
+export const drawCard = async (req, res) => {
+    const gameId = req.params.id;
+    const playerId = req.player.id;
+
+    const result = await gameService.drawCard({ gameId, playerId });
+    if (result.isErr()) {
+        const { statusCode, message } = result.error;
+        return res.status(statusCode).json({ message });
+    }
+    return res.status(200).json(result.value);
+};
+
+export const getGameOverview = async (req, res) => {
+    const gameId = req.params.id;
+    const playerId = req.player.id;
+
+    const result = await gameService.getGameOverview({ gameId, playerId });
+    if (result.isErr()) {
+        const { statusCode, message } = result.error;
+        return res.status(statusCode).json({ message });
+    }
+    return res.status(200).json(result.value);
 };

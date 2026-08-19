@@ -10,7 +10,4 @@ router.delete('/:id', cardsController.deleteCard);
 router.post('/', authenticate,cardsController.createCard);
 router.put('/:id',authenticate, cardsController.updateCard);
 
-
-router.post('/top-card', authenticate,cardsController.getTopCard);
-
 export default router;

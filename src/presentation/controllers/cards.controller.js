@@ -25,9 +25,3 @@ export const deleteCard = async (req, res) => {
     const result = await cardService.deleteCard(req.params.id);
     return handleResult(res, result, 200);
 };
-
-export const getTopCard = async (req, res) => {
-    const id = Number(req.body?.game_id);
-    const result = await cardService.getTopCard(id);
-    return handleResult(res, result, 200);
-};
