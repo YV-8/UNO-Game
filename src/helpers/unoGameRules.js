@@ -1,115 +1,143 @@
-import { shuffleDeck } from '../../helpers/unoDeck.js';
+export const unoGameRules = ({ unoDeck, parseCardString }) => {
+    /** deal ONE CARD to each layer, recursive, if don't get enough card don't repart more*/
+    const dealOneRound = (deck, playerIds, hands, playerIndex) => {
+        if (playerIndex === playerIds.length) {
+            return { updatedHands: hands, remainingDeck: deck };
+        }
+        const [card, ...restDeck] = deck;
+        const playerId = playerIds[playerIndex];
+        const updatedHands = { ...hands, [playerId]: [...hands[playerId], card] };
 
-/**
- * Reparte `cardsPerPlayer` cartas a cada jugador desde el deck.
- * Puro: no toca la BD, solo transforma arrays en memoria.
- *
- * @param {Array} deck - mazo completo (ya barajado)
- * @param {Array<number|string>} playerIds - orden de reparto
- * @param {number} cardsPerPlayer
- * @returns {{ hands: Record<string, Array>, remainingDeck: Array }}
- */
-export const dealCards = (deck, playerIds, cardsPerPlayer = 7) => {
-    const remainingDeck = [...deck];
-    const hands = {};
+        return dealOneRound(restDeck, playerIds, updatedHands, playerIndex + 1);
+    };
 
-    playerIds.forEach((playerId) => {
-        hands[playerId] = remainingDeck.splice(0, cardsPerPlayer);
-    });
+    /**
+    * deal -> `cardsPerPlayer` cards to player -> table
+    * don't touch DB transform memory arrays
+    * @param {Array} deck all deck
+    * recursive method
+    * @param {Array<number|string>} playerIds  order player
+    * @param {number} cardsPerPlayer
+    * @returns {{ hands: Record<string, Array>, remainingDeck: Array }}
+    * complete "if" for all cards else  repart then */
+    const dealCards = (deck, playerIds, cardsPerPlayer = 7, hands = null, round = 0) => {
+        const currentHands = hands ?? Object.fromEntries(playerIds.map((id) => [id, []]));
+        if (round === cardsPerPlayer) {
+            return { hands: currentHands, remainingDeck: deck };
+        }
+        const { updatedHands, remainingDeck } = dealOneRound(deck, playerIds, currentHands, 0);
 
-    return { hands, remainingDeck };
-};
+        return dealCards(remainingDeck, playerIds, cardsPerPlayer, updatedHands, round + 1);
+    };
 
-/**
- * Verifica si `card` se puede jugar sobre `topCard`.
- * Las comodín (color null) siempre son jugables.
- * `chosenColor` es el color elegido tras un wild anterior (si aplica);
- * si no hay elección activa, se usa el color real de topCard.
- */
-export const canPlayCard = (card, topCard, chosenColor = null) => {
-    if (!card || !topCard) return false;
-    if (card.color === null) return true; // wild / wild_draw_four
+    /**Get de initial card -> wild don't revice, and try again*/
+    const drawInitialTableCard = (deck) => {
+        const [card, ...rest] = deck;
+        if (!card) return { tableCard: null, remainingDeck: [] };
+        if (card.color !== null) return { tableCard: card, remainingDeck: rest };
+        return drawInitialTableCard([...rest, card]);
+    };
 
-    const effectiveColor = chosenColor ?? topCard.color;
-    return card.color === effectiveColor || card.value === topCard.value;
-};
+    //Logic game
+    /**Verificate  `card` can play about to `topCard`. wild play anytime
+     * chosenColor`-> wild before -> is nedeed
+     * don't select -> use color topCard */
+    const canPlayCard = (card, topCard, chosenColor = null) => {
+        if (!card || !topCard) return false;
+        if (card.color === null) return true;
 
-/**
- * Calcula el índice del siguiente jugador según dirección (1 = horario,
- * -1 = reverse) y si hay que saltar un turno (skip).
- * Usa módulo seguro para nunca devolver un índice negativo.
- */
-export const getNextPlayerIndex = (currentIndex, totalPlayers, direction = 1, skip = false) => {
-    const step = skip ? 2 : 1;
-    let next = (currentIndex + direction * step) % totalPlayers;
-    if (next < 0) next += totalPlayers;
-    return next;
-};
+        const effectiveColor = chosenColor ?? topCard.color;
+        return card.color === effectiveColor || card.value === topCard.value;
+    };
 
-/**
- * Determina cuántas cartas debe robar el siguiente jugador según la carta
- * jugada (draw_two = +2, wild_draw_four = +4). 0 si no aplica penalidad.
- */
-export const getDrawPenalty = (card) => {
-    if (card.value === 'draw_two') return 2;
-    if (card.value === 'wild_draw_four') return 4;
-    return 0;
-};
+    /**Search card with formatCard() match it*/
+    const findCardInHand = (hand, cardString) => {
+        if (hand.length === 0) return null;
+        const [first, ...rest] = hand;
+        return unoDeck.formatCard(first) === cardString ? first : findCardInHand(rest, cardString);
+    };
 
-/**
- * Saca `count` cartas del deck. Si el deck no alcanza, devuelve lo que
- * haya disponible (el llamador decide si reshuffle-ar el descarte antes).
- */
-export const drawCards = (deck, count) => {
-    const drawn = deck.slice(0, count);
-    const remainingDeck = deck.slice(count);
-    return { drawn, remainingDeck };
-};
+    /** Player a card between the top cart actual
+     * decided is valid  or need other card
+     * or cath up  a card between valid */
+    const hasPlayableCard = (hand, topCard) => {
+        if (hand.length === 0) return false;
+        const [first, ...rest] = hand;
+        return canPlayCard(first, topCard) ? true : hasPlayableCard(rest, topCard);
+    };
 
-/**
- * Cuando el deck se queda sin cartas: toma todo el descarte EXCEPTO la
- * carta superior actual (que debe seguir visible como referencia de
- * juego), lo baraja, y ese resultado se convierte en el nuevo deck.
- *
- * @param {Array} discardPile - todas las cartas en descarte, la primera
- *   posición [0] debe ser la carta superior actual (topCard)
- * @returns {{ newDeck: Array, keptTopCard: Object|null }}
- */
-export const reshuffleDiscardIntoDeck = (discardPile) => {
-    if (!discardPile || discardPile.length <= 1) {
-        return { newDeck: [], keptTopCard: discardPile?.[0] ?? null };
-    }
+    /** Calcula el índice del siguiente jugador según dirección (1 = horario,
+     * -1 = reverse) y si hay que saltar un turno (skip).
+     * Usa módulo seguro para nunca devolver un índice negativo.
+     * */
+    const getNextPlayerIndex = (currentIndex, totalPlayers, direction = 1, skip = false) => {
+        const step = skip ? 2 : 1;
+        let next = (currentIndex + direction * step) % totalPlayers;
+        if (next < 0) next += totalPlayers;
+        return next;
+    };
 
-    const [topCard, ...restOfDiscard] = discardPile;
-    return {
-        newDeck: shuffleDeck(restOfDiscard),
-        keptTopCard: topCard,
+    /**how many card give him for +2 or + 4*/
+    const getDrawPenalty = (card) => {
+        if (card.value === 'draw_two') return 2;
+        if (card.value === 'wild_draw_four') return 4;
+        return 0;
+    };
+
+    /** Cuando el deck se queda sin cartas: toma todo el descarte EXCEPTO la
+     *  carta superior actual (que debe seguir visible como referencia de
+     * juego), lo baraja, y ese resultado se convierte en el nuevo deck.
+     * @param {Array} discardPile - todas las cartas en descarte, la primera
+     * posición [0] debe ser la carta superior actual (topCard)
+     * @returns {{ newDeck: Array, keptTopCard: Object|null }} */
+    const reshuffleDiscardIntoDeck = (discardPile) => {
+        if (!discardPile || discardPile.length <= 1) {
+            return { newDeck: [], keptTopCard: discardPile?.[0] ?? null };
+        }
+
+        const [topCard, ...restOfDiscard] = discardPile;
+        return {
+            newDeck: unoDeck.shuffleDeck(restOfDiscard),
+            keptTopCard: topCard,
+        };
+    };
+
+    const isSkipCard = (card) => card.value === 'skip';
+    const isReverseCard = (card) => card.value === 'reverse';
+    const isDrawCard = (card) => card.value === 'draw_two' || card.value === 'wild_draw_four';
+    const isWildCard = (card) => card.color === null;
+
+    return {dealCards,drawInitialTableCard,canPlayCard,findCardInHand,hasPlayableCard,getNextPlayerIndex,
+        getDrawPenalty, reshuffleDiscardIntoDeck,isSkipCard,isReverseCard,isDrawCard,isWildCard,
     };
 };
 
-/**
- * Envuelve drawCards + reshuffle automático: si el deck no tiene
- * suficientes cartas, primero rearma el mazo desde el descarte.
- */
-export const drawCardsWithReshuffle = (deck, discardPile, count) => {
-    if (deck.length >= count) {
-        return { ...drawCards(deck, count), discardPile };
-    }
+// /**
+//  * Saca `count` cartas del deck. Si el deck no alcanza, devuelve lo que
+//  * haya disponible (el llamador decide si reshuffle-ar el descarte antes).
+//  */
+// export const drawCards = (deck, count) => {
+//     const drawn = deck.slice(0, count);
+//     const remainingDeck = deck.slice(count);
+//     return { drawn, remainingDeck };
+// };
 
-    const { newDeck, keptTopCard } = reshuffleDiscardIntoDeck(discardPile);
-    const mergedDeck = [...deck, ...newDeck];
-    const { drawn, remainingDeck } = drawCards(mergedDeck, count);
+// /**
+//  * Envuelve drawCards + reshuffle automático: si el deck no tiene
+//  * suficientes cartas, primero rearma el mazo desde el descarte.
+//  */
+// export const drawCardsWithReshuffle = (deck, discardPile, count) => {
+//     if (deck.length >= count) {
+//         return { ...drawCards(deck, count), discardPile };
+//     }
 
-    return {
-        drawn,
-        remainingDeck,
-        discardPile: keptTopCard ? [keptTopCard] : [],
-    };
-};
+//     const { newDeck, keptTopCard } = reshuffleDiscardIntoDeck(discardPile);
+//     const mergedDeck = [...deck, ...newDeck];
+//     const { drawn, remainingDeck } = drawCards(mergedDeck, count);
 
-// Helpers de identificación de carta especial, útiles en el service que
-// resuelve el efecto de cada jugada (playCard)
-export const isSkipCard = (card) => card.value === 'skip';
-export const isReverseCard = (card) => card.value === 'reverse';
-export const isDrawCard = (card) => card.value === 'draw_two' || card.value === 'wild_draw_four';
-export const isWildCard = (card) => card.color === null;
+//     return {
+//         drawn,
+//         remainingDeck,
+//         discardPile: keptTopCard ? [keptTopCard] : [],
+//     };
+// };
