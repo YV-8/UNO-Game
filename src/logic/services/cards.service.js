@@ -1,3 +1,4 @@
+const COLORS = ['red', 'blue', 'yellow', 'green'];
 export const cardService = ({ cardRepository, cardRules, formatCard, respond }) => {
 
   const getAllCards = async () => {
@@ -44,47 +45,43 @@ export const cardService = ({ cardRepository, cardRules, formatCard, respond }) 
     if (!deleted) return respond.Err({ statusCode: 404, message: 'Card not found' });
     return respond.Ok({});
   };
-  /**
- * Genera y guarda de forma aleatoria la primera carta del descarte para un juego.
- * @param {number} gameId
- * @returns {Promise<Object>} Carta creada
- */
-  const createInitCard = async (gameId) => {
-    const numGameId = Number(gameId);
-    const colors = ['red', 'blue', 'yellow', 'green'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    const randomValue = String(Math.floor(Math.random() * 10));
-
-    return await createCard({
-      color: randomColor,
-      value: randomValue,
-      gameId: numGameId,
-      location: 'discard',
-      discardOrder: 1,
-    });
+  const initializeGameCards = async (gameId, playerIds, handSize = 7) => {
+    const { cardRows, topCard } = unoCardBuilder.buildInitialCardRows({ gameId, playerIds, handSize });
+    await cardRepository.bulkCreate(cardRows);
+    return respond.Ok({ topCard: unoDeck.formatCard(topCard) });
   };
-  /**
- * Obtiene la carta superior del descarte.
- * Si no existe, la crea dinámicamente en ese instante.
- */
-  const getTopCard = async (id) => {
-    const validation = await cardRules.validateGetTopCard({ id });
-    if (validation.isErr()) return validation;
 
-    const { game } = validation.value;
-    let topCard = await cardRepository.findTopDiscardByGameId(id);
+  const getTopCard = async (gameId) => {
+    const topCard = await cardRepository.findTopDiscardByGameId(gameId);
+    if (!topCard) return respond.Err({ statusCode: 404, message: 'No discard pile found for this game' });
+    return respond.Ok({ game_id: gameId, top_card: unoDeck.formatCard(topCard) });
+  };
 
-    if (!topCard) {
-      const initResult = await createInitCard(game.id);
-      if (initResult.isErr()) return initResult;
-      topCard = initResult.value;
+  // para cuando implementes las penalizaciones de robar cartas en playCard
+  const drawCards = async (gameId, playerId, count) => {
+    let deck = await cardRepository.findDeckByGameId(gameId);
+
+    if (deck.length < count) {
+      const discardPile = await cardRepository.findDiscardByGameId(gameId);
+      const [, ...restOfDiscard] = discardPile; // conserva la carta tope
+      const reshuffled = unoDeck.shuffleDeck(restOfDiscard);
+
+      await cardRepository.bulkUpdate(
+        reshuffled.map((card, index) => ({
+          id: card.id,
+          data: { location: 'deck', discardOrder: null, deckOrder: deck.length + index },
+        }))
+      );
+      deck = [...deck, ...reshuffled];
     }
 
-    return respond.Ok({
-      game_id: game.id,
-      top_card: formatCard(topCard),
-    });
+    const drawnCards = deck.slice(0, count);
+    await cardRepository.bulkUpdate(
+      drawnCards.map((card) => ({ id: card.id, data: { location: 'hand', playerId } }))
+    );
+
+    return respond.Ok(drawnCards.map(unoDeck.formatCard));
   };
 
-  return { getAllCards, getCardById, createCard, updateCard, deleteCard, createInitCard, getTopCard };
+  return { getAllCards, getCardById, createCard, updateCard, deleteCard, initializeGameCards, getTopCard, drawCards};
 };

@@ -15,7 +15,8 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameExists,
         gameValidator.validateIsCreator,
         gameValidator.validateGameStateIs('waiting', 'This game cannot be started from its current state'),
-        gameValidator.validateMinPlayers
+        gameValidator.validateMinPlayers,
+        gameValidator.validateCardsNotCreated
     ),
 
     validateEndGame: composeAsyncValidators(
@@ -31,6 +32,34 @@ export const gameRules = (gameValidator) => ({
     ),
 
     validateLeaveGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validateGetTopCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateTopCardExists
+    ),
+    validatePlayCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateTurnOrder,
+        gameValidator.validateCardInHand,
+        gameValidator.validateChosenColorForWild,
+        gameValidator.validateCardCompatible
+    ),
+    validateGetPlayerHand: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validateDrawCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateTurnOrder,
+        gameValidator.validateNoPlayableCard
+    ),
+    validateGetGameOverview: composeAsyncValidators(
         gameValidator.validateGameExists,
         gameValidator.validateActivePlayer
     ),

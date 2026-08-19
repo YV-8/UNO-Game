@@ -1,7 +1,7 @@
 import Respond from '../monads/respond.js';
 
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
-export const cardValidator = ({ cardRepository, gameRepository }) => ({
+export const cardValidator = ({ cardRepository, gameRepository, gamePlayerRepository }) => ({
     validateIdProvided: async (data) => {
         if (!data.id) {
             return Respond.Err({ statusCode: 400, message: 'ID is required' });
