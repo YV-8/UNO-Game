@@ -1,4 +1,4 @@
-import {Card} from '../models/index.js';
+import { Card } from '../models/index.js';
 
 class CardRepository {
     async findAll() {
@@ -24,6 +24,16 @@ class CardRepository {
         if (!card) return false;
         await card.destroy();
         return true;
+    }
+    async bulkCreate(cardsData) {
+        return await Card.bulkCreate(cardsData);
+    }
+
+    async findTopDiscardByGameId(gameId) {
+        return await Card.findOne({
+            where: { gameId, location: 'discard' },
+            order: [['discardOrder', 'DESC']],
+        });
     }
 }
 

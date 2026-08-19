@@ -9,4 +9,7 @@ router.post('/', cardsController.createCard);
 router.put('/:id', cardsController.updateCard);
 router.delete('/:id', cardsController.deleteCard);
 
+
+router.post('/top-card', cardsController.getTopCard);
+
 export default router;

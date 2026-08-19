@@ -7,7 +7,8 @@ dataBase.authenticate()
   .then(async () => {
     console.log('Database connection has been established successfully.');
     
-    await dataBase.sync({ alter: true });
+    //alter: true
+    await dataBase.sync({});
     console.log('Database models synchronized and tables created successfully.');
 
     app.listen(PORT, () => {

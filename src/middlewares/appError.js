@@ -9,7 +9,6 @@ export class appError extends Error {
     this.status = `${this.statusCode}`.startsWith('4') ? 'internal fail' : 'error';
     this.isOperational = true; // error controlado por nosotros
 
-    // Asegura que el nombre de la clase se mantenga en el stack trace
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
   }
