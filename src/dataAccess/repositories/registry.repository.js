@@ -1,42 +1,24 @@
-import Registry from '../models/registry.js'; // Ajusta la ruta a tu modelo
+import {Registry} from '../models/index.js';
 
 const registryRepository = {
+    create: async (data) => Registry.create(data),
 
-    // Crear un nuevo registro de movimiento
-    create: async (data) => {
-        return await Registry.create(data);
-    },
+    findByGameId: async (gameId) => Registry.findAll({
+        where: { gameId },
+        order: [['id', 'ASC']],
+    }),
 
-    // Obtener todo el historial de movimientos de un juego específico
-    findByGameId: async (gameId) => {
-        return await Registry.findAll({
-            where: { gameId },
-            order: [['id', 'ASC']],
-        });
-    },
+    findByPlayerAndGame: async (gameId, playerId) => Registry.findAll({
+        where: { gameId, playerId },
+        order: [['id', 'ASC']],
+    }),
 
-    // Obtener los movimientos de un jugador en un juego particular
-    findByPlayerAndGame: async (gameId, playerId) => {
-        return await Registry.findAll({
-            where: { gameId, playerId },
-            order: [['id', 'ASC']],
-        });
-    },
+    findLastMoveByGameId: async (gameId) => Registry.findOne({
+        where: { gameId },
+        order: [['id', 'DESC']],
+    }),
 
-    // Obtener el último movimiento realizado en una partida
-    findLastMoveByGameId: async (gameId) => {
-        return await Registry.findOne({
-            where: { gameId },
-            order: [['id', 'DESC']],
-        });
-    },
-
-    // Eliminar los registros asociados a un juego terminado
-    deleteByGameId: async (gameId) => {
-        return await Registry.destroy({
-            where: { gameId },
-        });
-    },
+    deleteByGameId: async (gameId) => Registry.destroy({ where: { gameId } }),
 };
 
 export default registryRepository;

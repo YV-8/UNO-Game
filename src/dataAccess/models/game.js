@@ -32,10 +32,6 @@ const gameModel = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 1,
       },
-      chosenColor: {
-        type: DataTypes.ENUM('red', 'blue', 'yellow', 'green'),
-        allowNull: true,
-      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

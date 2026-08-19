@@ -9,15 +9,23 @@ const cardModel = (sequelize, DataTypes) => {
             },
             color: {
                 type: DataTypes.ENUM('red', 'blue', 'yellow', 'green'),
-                allowNull: false,
+                allowNull: true,
             },
             value: {
                 type: DataTypes.STRING,
                 allowNull: false,
             },
+            type: {
+                type: DataTypes.ENUM('number', 'action', 'wild'),
+                allowNull: false,
+            },
             gameId: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+            },
+            playerId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
             },
             location: {
                 type: DataTypes.ENUM('deck', 'hand', 'discard'),

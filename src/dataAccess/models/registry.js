@@ -1,6 +1,3 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../database";
-
 const registryModel = (sequelize, DataTypes) => {
     const Registry = sequelize.define(
         'Registry',
@@ -19,9 +16,10 @@ const registryModel = (sequelize, DataTypes) => {
                 allowNull: true,
                 defaultValue: "No details",
             },
-            timestamp:{
-                type: DataTypes.JSON,
-                dafaultValue:DataTypes.NOW,
+            createdAt: {
+                type: DataTypes.DATE,
+                allowNull: false,
+                defaultValue: DataTypes.NOW,
             },
             gameId: {
                 type: DataTypes.INTEGER,
@@ -35,10 +33,12 @@ const registryModel = (sequelize, DataTypes) => {
         {
             tableName: "moves",
             timestamps: false,
-            indexes: [
-                { unique: true, fields: ['gameId', 'playerId']}
-            ],
         }
     );
+    Registry.associate = (models) => {
+        Registry.belongsTo(models.Game, { foreignKey: 'gameId' });
+        Registry.belongsTo(models.Player, { foreignKey: 'playerId' });
+    };
+    return Registry;
 }
-export default Registry;
+export default registryModel;

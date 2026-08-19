@@ -6,11 +6,14 @@ import gameRepository from './dataAccess/repositories/game.repository.js';
 import gamePlayerRepository from './dataAccess/repositories/gamePlayer.repository.js';
 import cardRepository from './dataAccess/repositories/cards.repository.js';
 import scoreRepository from './dataAccess/repositories/score.repository.js';
+import registryRepository from './dataAccess/repositories/registry.repository.js';
 
 import { addToBlacklist } from './middlewares/tokenBlacklist.js';
-import { shuffleDeck, formatCard } from './helpers/unoDeck.js';
+import { unoDeck as createUnoDeck } from './helpers/unoDeck.js';
+import { unoGameRules as createUnoGameRules } from './helpers/unoGameRules.js';
+import { unoCardBuilder as createUnoCardBuilder, unoCardBuilder } from './helpers/unoCardBuilder.js';
 import respond from './logic/monads/respond.js';
-import registryRepository from './dataAccess/repositories/registry.repository.js';
+import { parseCardString } from './helpers/parseCardsString.js';
 
 import { authValidator } from './logic/validators/authValidator.js';
 import { playerValidator } from './logic/validators/playerValidator.js';
@@ -70,16 +73,32 @@ export const playerService = createPlayerService({
 });
 
 // Game
+const builtUnoDeck = createUnoDeck();
+const builtUnoGameRules = createUnoGameRules({ unoDeck: builtUnoDeck, parseCardString });
+
 const builtGameValidator = gameValidator({
     gameRepository,
     gamePlayerRepository,
+    cardRepository,
+    unoGameRules: builtUnoGameRules,
+    parseCardString,
 });
 const builtGameRules = gameRules(builtGameValidator);
 
+const builtUnoCardBuilder = unoCardBuilder({
+    unoDeck: builtUnoDeck,
+    unoGameRules: builtUnoGameRules,
+    cardRepository,
+});
 export const gameService = createGameService({
     gameRepository,
+    cardRepository,
     gamePlayerRepository,
+    registryRepository,
     gameRules: builtGameRules,
+    unoDeck: builtUnoDeck,
+    unoGameRules: builtUnoGameRules,
+    unoCardBuilder: builtUnoCardBuilder,
     respond,
 });
 
@@ -96,7 +115,6 @@ export const cardService = createCardService({
     gamePlayerRepository,
     registryRepository,
     cardRules: builtCardRules,
-    formatCard,
     respond,
 });
 
