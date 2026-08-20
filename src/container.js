@@ -14,6 +14,7 @@ import { unoGameRules as createUnoGameRules } from './helpers/unoGameRules.js';
 import { unoCardBuilder as createUnoCardBuilder, unoCardBuilder } from './helpers/unoCardBuilder.js';
 import respond from './logic/monads/respond.js';
 import { parseCardString } from './helpers/parseCardsString.js';
+import {gameRegistryBuilder} from './helpers/gameRegistryBuilder.js';
 
 import { authValidator } from './logic/validators/authValidator.js';
 import { playerValidator } from './logic/validators/playerValidator.js';
@@ -32,6 +33,7 @@ import { playerService as createPlayerService } from './logic/services/player.se
 import { gameService as createGameService } from './logic/services/game.service.js';
 import { cardService as createCardService } from './logic/services/cards.service.js';
 import { scoreService as createScoreService } from './logic/services/score.service.js';
+import { Registry } from './dataAccess/models/index.js';
 
 const hashProvider = {
     hash: (plain, rounds) => bcrypt.hash(plain, rounds),
@@ -75,6 +77,7 @@ export const playerService = createPlayerService({
 // Game
 const builtUnoDeck = createUnoDeck();
 const builtUnoGameRules = createUnoGameRules({ unoDeck: builtUnoDeck, parseCardString });
+const builtGameRegistryBuilder = gameRegistryBuilder({ unoDeck: builtUnoDeck });
 
 const builtGameValidator = gameValidator({
     gameRepository,
@@ -99,6 +102,7 @@ export const gameService = createGameService({
     unoDeck: builtUnoDeck,
     unoGameRules: builtUnoGameRules,
     unoCardBuilder: builtUnoCardBuilder,
+    gameRegistryBuilder: builtGameRegistryBuilder,
     respond,
 });
 

@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes,Op } from 'sequelize';
 import sequelize from '../database.js';
 import playerModel from './player.js';
 import gameModel from './game.js';
