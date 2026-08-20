@@ -140,3 +140,27 @@ export const getGameOverview = async (req, res) => {
     }
     return res.status(200).json(result.value);
 };
+
+export const sayUno = async (req, res) => {
+    const gameId = req.params.id;
+    const playerId = req.player.id;
+    const result = await gameService.sayUno({ gameId, playerId });
+    if (result.isErr()) {
+        const { statusCode, message } = result.error;
+        return res.status(statusCode).json({ message });
+    }
+    return res.status(200).json(result.value);
+};
+
+export const challengeUno = async (req, res) => {
+    const gameId = req.params.id;
+    const playerId = req.player.id;
+    const challengedUsername = req.body.challengedPlayer;
+
+    const result = await gameService.challengeUno({ gameId, playerId, challengedUsername });
+    if (result.isErr()) {
+        const { statusCode, message } = result.error;
+        return res.status(statusCode).json({ message });
+    }
+    return res.status(200).json(result.value);
+};
