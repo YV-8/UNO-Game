@@ -1,4 +1,5 @@
-export const gameService = ({ gameRepository, cardRepository,registryRepository, gameRules, gamePlayerRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, respond }) => {
+const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
+export const gameService = ({ gameRepository, cardRepository, registryRepository, gameRules, gamePlayerRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, gameRegistryBuilder, respond }) => {
     const getAllGame = async () => {
         const games = await gameRepository.findAll();
         return respond.Ok(games);
@@ -119,7 +120,6 @@ export const gameService = ({ gameRepository, cardRepository,registryRepository,
 
         return respond.Ok({
             message: 'Game started successfully',
-            top_card: unoDeck.formatCard(topCard),
         });
     };
 
@@ -177,58 +177,57 @@ export const gameService = ({ gameRepository, cardRepository,registryRepository,
 
         return validation.map(() => ({ message: 'User left the game successfully' }));
     };
-
+    /** CardWild -> color -> null then topDoscard exist 1 else 0
+     * update card's location
+     * review activePlayer, currentIndex, and total players
+     * direction card reverse, drwaPenalty, skipTurn
+    */
     const playCard = async ({ gameId, playerId, cardPlayedStr, chosenColor = null }) => {
         const validation = await gameRules.validatePlayCard({ gameId, playerId, cardPlayedStr, chosenColor });
         if (validation.isErr()) return validation;
 
-        const { game, playerCard, targetCard, topDiscard } = validation.value;
+        const { game, playerCard, targetCard, topDiscard, chosenColor: validColor } = validation.value;
         const isWild = targetCard.color === null;
         const nextDiscardOrder = (topDiscard?.discardOrder || 0) + 1;
 
-        // Si es wild, el color elegido queda como el color "real" de la carta
-        // en la mesa -> así el próximo canPlayCard compara contra un color válido,
-        // sin tener que tratar el wild como caso especial en ningún otro lado.
         await cardRepository.update(playerCard.id, {
             location: 'discard',
             discardOrder: nextDiscardOrder,
-            ...(isWild ? { color: chosenColor } : {}),
+            ...(isWild ? { color: validColor } : {}),
         });
-
         const activePlayers = await gamePlayerRepository.findAllByGameId(game.id);
         const currentIndex = activePlayers.findIndex((p) => p.playerId === playerId);
         const totalPlayers = activePlayers.length;
 
         let newDirection = game.direction;
-        if (unoGameRules.isReverseCard(targetCard)) newDirection *= -1;
+        const isReverse = unoGameRules.isReverseCard(targetCard);
+        if (isReverse) { newDirection *= -1; }
 
-        const drawPenalty = unoGameRules.getDrawPenalty(targetCard); // 0, 2 (draw_two) o 4 (wild_draw_four)
-        const skipTurn = unoGameRules.isSkipCard(targetCard) || drawPenalty > 0;
+        const drawPenalty = unoGameRules.getDrawPenalty(targetCard);
+        const isSkip = unoGameRules.isSkipCard(targetCard) || drawPenalty > 0;
+        const skipTurn = isSkip || drawPenalty > 0 || (isReverse && totalPlayers === 2);
 
-        // Quien está inmediatamente después en el orden (sin saltar) es quien
-        // roba las cartas de la penalización, si corresponde.
+        // the next person draw has card penalty
         if (drawPenalty > 0) {
             const penalizedIndex = unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, newDirection, false);
             const penalizedPlayerId = activePlayers[penalizedIndex].playerId;
             await unoCardBuilder.drawCards({ gameId: game.id, playerId: penalizedPlayerId, count: drawPenalty });
         }
 
-        // Quien realmente juega a continuación: salta al penalizado/skipeado si aplica.
+        // Spick the person
         const nextIndex = unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, newDirection, skipTurn);
         const nextPlayerId = activePlayers[nextIndex].playerId;
 
         const remainingCards = await cardRepository.countByGameAndPlayer(gameId, playerId, 'hand');
         const updateData = { currentPlayerId: nextPlayerId, direction: newDirection };
-        if (remainingCards === 0) updateData.state = 'finished';
-        await gameRepository.update(game.id, updateData);
-
+        if (remainingCards === 0) { updateData.state = 'finished' };
         await gameRepository.update(game.id, updateData);
 
         await registryRepository.create({
             gameId: game.id,
             playerId,
             move: 'play_card',
-            details: { card: unoDeck.formatCard(targetCard), chosenColor },
+            details: { card: unoDeck.formatCard(targetCard), chosenColor: validColor },
         });
         return respond.Ok({
             message: remainingCards === 0 ? 'You played your last card! You win!' : 'Card played successfully.',
@@ -259,14 +258,11 @@ export const gameService = ({ gameRepository, cardRepository,registryRepository,
         const nextPlayerId = activePlayers[nextIndex].playerId;
 
         await gameRepository.update(game.id, { currentPlayerId: nextPlayerId });
-
-        await gameRepository.update(game.id, updateData);
-
         await registryRepository.create({
             gameId: game.id,
             playerId,
-            move: 'play_card',
-            details: { card: unoDeck.formatCard(targetCard), chosenColor },
+            move: 'draw_card',
+            details: { card: unoDeck.formatCard(drawCard) },
         });
         return respond.Ok({
             message: `${activePlayers[currentIndex].username} drew a card from the deck.`,
@@ -277,11 +273,9 @@ export const gameService = ({ gameRepository, cardRepository,registryRepository,
     const getPlayerHand = async ({ gameId, playerId }) => {
         const validation = await gameRules.validateGetPlayerHand({ gameId, playerId });
         if (validation.isErr()) return validation;
-
         const { game, gamePlayer } = validation.value;
         const hand = await cardRepository.findHandByGameAndPlayer(game.id, playerId);
 
-        await gameRepository.update(game.id, { currentPlayerId: nextPlayerId });
         return respond.Ok({
             player: gamePlayer.username,
             hand: hand.map(unoDeck.formatCard),
@@ -294,108 +288,98 @@ export const gameService = ({ gameRepository, cardRepository,registryRepository,
         return entry.move;
     };
 
+    // const getGameOverview = async ({ gameId, playerId }) => {
+    //     const validation = await gameRules.validateGetGameOverview({ gameId, playerId });
+    //     if (validation.isErr()) return validation;
+
+    //     const { game } = validation.value;
+
+    //     const [activePlayers, topDiscard, moves] = await Promise.all([
+    //         gamePlayerRepository.findAllByGameId(game.id),
+    //         cardRepository.findTopDiscardByGameId(game.id),
+    //         registryRepository.findByGameId(game.id),
+    //     ]);
+
+    //     const usernameByPlayerId = Object.fromEntries(activePlayers.map((p) => [p.playerId, p.username]));
+
+    //     const hands = {};
+    //     await Promise.all(
+    //         activePlayers.map(async (player) => {
+    //             const hand = await cardRepository.findHandByGameAndPlayer(game.id, player.playerId);
+    //             hands[player.username] = hand.map(unoDeck.formatCard);
+    //         })
+    //     );
+
+    //     const currentPlayer = activePlayers.find((p) => p.playerId === game.currentPlayerId);
+
+    //     return respond.Ok({
+    //         currentPlayer: currentPlayer?.username ?? null,
+    //         topCard: topDiscard ? unoDeck.formatCard(topDiscard) : null,
+    //         hands,
+    //         turnHistory: moves.map((entry) => ({
+    //             player: usernameByPlayerId[entry.playerId] ?? `Player ${entry.playerId}`,
+    //             action: formatRegistryAction(entry),
+    //         })),
+    //     });
+    // };
+
     const getGameOverview = async ({ gameId, playerId }) => {
         const validation = await gameRules.validateGetGameOverview({ gameId, playerId });
         if (validation.isErr()) return validation;
 
         const { game } = validation.value;
-
         const [activePlayers, topDiscard, moves] = await Promise.all([
             gamePlayerRepository.findAllByGameId(game.id),
             cardRepository.findTopDiscardByGameId(game.id),
             registryRepository.findByGameId(game.id),
         ]);
 
-        const usernameByPlayerId = Object.fromEntries(activePlayers.map((p) => [p.playerId, p.username]));
-
-        const hands = {};
-        await Promise.all(
-            activePlayers.map(async (player) => {
-                const hand = await cardRepository.findHandByGameAndPlayer(game.id, player.playerId);
-                hands[player.username] = hand.map(unoDeck.formatCard);
-            })
+        const handsEntries = await Promise.all(
+            activePlayers.map(async (p) => [p.playerId, await cardRepository.findHandByGameAndPlayer(game.id, p.playerId)])
         );
+        const handsByPlayerId = Object.fromEntries(handsEntries);
 
-        const currentPlayer = activePlayers.find((p) => p.playerId === game.currentPlayerId);
-
-        return respond.Ok({
-            currentPlayer: currentPlayer?.username ?? null,
-            topCard: topDiscard ? unoDeck.formatCard(topDiscard) : null,
-            hands,
-            turnHistory: moves.map((entry) => ({
-                player: usernameByPlayerId[entry.playerId] ?? `Player ${entry.playerId}`,
-                action: formatRegistryAction(entry),
-            })),
-        });
+        return respond.Ok(gameRegistryBuilder.build({ game, activePlayers, topDiscard, handsByPlayerId, moves }));
     };
 
-    // /**
-    //    * Crea las 108 cartas, reparte 7 a cada jugador (recursivo, round-robin)
-    //    * y deja la siguiente carta no-wild como carta de mesa. Se llama desde
-    //    * el controller justo después de que gameService.startGame pase el
-    //    * juego a 'in_progress'.
-    //    */
-    // const dealInitialCards = async ({ gameId, playerIds, cardRepository, resgistryRepository }) => {
-    //     const validation = await cardRules.validateDealInitialCards({ gameId });
-    //     if (validation.isErr()) return validation;
-    //     const { gameId: numGameId } = validation.value;
+    const sayUno = async ({ gameId, playerId }) => {
+        const validation = await gameRules.validateSayUno({ gameId, playerId });
+        if (validation.isErr()) return validation;
 
-    //     const deck = unoDeck.shuffleDeck(buildDeck());
-    //     const { hands, remainingDeck } = dealCards(deck, playerIds, 7);
-    //     const { tableCard, remainingDeck: deckAfterTable } = drawInitialTableCard(remainingDeck);
+        const { game, gamePlayer } = validation.value;
+        await gamePlayerRepository.update(gamePlayer.id, { sayOne: true });
 
-    //     const handRows = playerIds.flatMap((playerId) =>
-    //         hands[playerId].map((card) => ({
-    //             color: card.color, value: card.value, gameId: numGameId, playerId, location: 'hand',
-    //         }))
-    //     );
-    //     const deckRows = deckAfterTable.map((card, index) => ({
-    //         color: card.color, value: card.value, gameId: numGameId, location: 'deck', deckOrder: index,
-    //     }));
-    //     const discardRow = {
-    //         color: tableCard.color, value: tableCard.value, gameId: numGameId, location: 'discard', discardOrder: 1,
-    //     };
+        await registryRepository.create({ gameId: game.id, playerId, move: 'say_uno' });
 
-    //     await cardRepository.bulkCreate([...handRows, ...deckRows, discardRow]);
-    //     await registryRepository.create({
-    //         move: 'deal_initial_cards',
-    //         gameId: numGameId,
-    //         playerId: playerIds[0],
-    //         details: { cardsPerPlayer: 7, topCard: formatCard(tableCard) },
-    //     });
+        return respond.Ok({ message: `${gamePlayer.username} said UNO successfully.` });
+    };
 
-    //     return respond.Ok({
-    //         message: 'Cards dealt successfully.',
-    //         players: Object.fromEntries(Object.entries(hands).map(([id, cards]) => [id, cards.map(formatCard)])),
-    //         topCard: formatCard(tableCard),
-    //     });
-    // };
+    const challengeUno = async ({ gameId, playerId, challengedUsername }) => {
+    const validation = await gameRules.validateChallengeUno({ gameId, playerId, challengedUsername });
+    if (validation.isErr()) return validation;
 
-    // /**
-    //  * Roba `count` cartas. Si el mazo no alcanza, rearma el mazo desde
-    //  * el descarte (menos la carta tope) y reescribe esas filas en BD.
-    //  */
-    // const drawFromDeck = async (gameId, count) => {
-    //     let deck = await cardRepository.findDeckByGameId(gameId);
+    const { game, challengedPlayer } = validation.value;
 
-    //     if (deck.length < count) {
-    //         const discardPile = await cardRepository.findDiscardByGameId(gameId);
-    //         const [, ...restOfDiscard] = discardPile;
-    //         const reshuffled = shuffleDeck(restOfDiscard);
+    await unoCardBuilder.drawCards({ gameId: game.id, playerId: challengedPlayer.playerId, count: 2 });
+    await gamePlayerRepository.update(challengedPlayer.id, { sayOne: false });
 
-    //         await cardRepository.bulkUpdate(
-    //             reshuffled.map((card, index) => ({
-    //                 id: card.id,
-    //                 data: { location: 'deck', discardOrder: null, deckOrder: deck.length + index },
-    //             }))
-    //         );
-    //         deck = [...deck, ...reshuffled];
-    //     }
-    //     return deck.slice(0, count);
-    // };
+    await registryRepository.create({
+        gameId: game.id,
+        playerId,
+        move: 'challenge_uno',
+        details: { challenged: challengedPlayer.username, result: 'success' },
+    });
+
+    const currentPlayerRow = await gamePlayerRepository.findByGameAndPlayer(game.id, game.currentPlayerId);
+
+    return respond.Ok({
+        message: `Challenge successful. ${challengedPlayer.username} forgot to say UNO and draws 2 cards.`,
+        nextPlayer: currentPlayerRow?.username ?? null,
+    });
+};
     return {
         getAllGame, getGameById, createGame, updateGame, deleteGame, getGameState, getGamePlayers, getCurrentPlayer, getGameScores,
-        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getPlayerHand, drawCard, getGameOverview
+        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getPlayerHand, drawCard, getGameOverview, sayUno, challengeUno
     };
 };
 

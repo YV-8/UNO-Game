@@ -1,6 +1,10 @@
 import Respond from '../monads/respond.js';
 const VALID_STATUSES = ['waiting', 'in_progress', 'finished'];
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
+const normalizeColor = (color) => {
+    if (!color || typeof color !== 'string') return null;
+    return color.trim().toLowerCase();
+};
 export const gameValidator = ({ gameRepository, gamePlayerRepository, cardRepository, unoGameRules, parseCardString }) => ({
     validateNameProvided: async (data) => {
         if (!data.name) {
@@ -147,14 +151,14 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
     validateChosenColorForWild: async (data) => {
         const { targetCard, chosenColor } = data;
         const isWild = targetCard.color === null; // wild / wild_draw_four
-
-        if (isWild && !VALID_COLORS.includes(chosenColor)) {
+        const normalizedColor = normalizeColor(data.chosenColor);
+        if (isWild && (!normalizedColor || !VALID_COLORS.includes(normalizedColor))) {
             return Respond.Err({
                 statusCode: 400,
                 message: 'chosenColor is required for wild cards and must be one of: red, blue, yellow, green',
             });
         }
-        return Respond.Ok(data);
+        return Respond.Ok({ ...data, chosenColor: normalizedColor });
     },
     validateNoPlayableCard: async (data) => {
         const { game, playerId } = data;
@@ -175,5 +179,38 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
         }
 
         return Respond.Ok({ ...data, topDiscard });
+    },
+
+    validateCanSayUno: async (data) => {
+        const { game, playerId } = data;
+        const handCount = await cardRepository.countByGameAndPlayer(game.id, playerId, 'hand');
+        if (handCount > 2) {
+            return Respond.Err({ statusCode: 400, message: 'You can only say UNO when you have 1 or 2 cards left' });
+        }
+        return Respond.Ok(data);
+    },
+
+    validateChallengedPlayerExists: async (data) => {
+        const { game, challengedUsername } = data;
+        const activePlayers = await gamePlayerRepository.findAllByGameId(game.id);
+        const challengedPlayer = activePlayers.find((p) => p.username === challengedUsername);
+        if (!challengedPlayer) {
+            return Respond.Err({ statusCode: 404, message: 'Challenged player not found in this game' });
+        }
+        return Respond.Ok({ ...data, challengedPlayer });
+    },
+
+    validateChallengeIsValid: async (data) => {
+        const { game, challengedPlayer } = data;
+        const handCount = await cardRepository.countByGameAndPlayer(game.id, challengedPlayer.playerId, 'hand');
+        const forgotToSayUno = handCount === 1 && !challengedPlayer.sayOne;
+
+        if (!forgotToSayUno) {
+            return Respond.Err({
+                statusCode: 400,
+                message: `Challenge failed. ${challengedPlayer.username} said UNO on time.`,
+            });
+        }
+        return Respond.Ok(data);
     },
 });
