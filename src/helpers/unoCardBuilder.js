@@ -26,7 +26,8 @@ export const unoCardBuilder = ({ unoDeck, unoGameRules, cardRepository }) => {
         const { hands, remainingDeck } = unoGameRules.dealCards(shuffledDeck, playerIds, handSize);
         const isPlainNumberCard = (card) => card.color !== null && !isNaN(card.value);
         const tableCardIndex = remainingDeck.findIndex(isPlainNumberCard);
-        const tableCard = remainingDeck[tableCardIndex];
+        const validIndex = tableCardIndex !== -1 ? tableCardIndex : 0;
+        const tableCard = remainingDeck[validIndex];
         const deckAfterTable = remainingDeck.filter((_, index) => index !== tableCardIndex);
 
         const handRows = playerIds.flatMap((playerId) =>

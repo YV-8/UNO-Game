@@ -66,9 +66,8 @@ export const unoGameRules = ({ unoDeck, parseCardString }) => {
         return canPlayCard(first, topCard) ? true : hasPlayableCard(rest, topCard);
     };
 
-    /** Calcula el índice del siguiente jugador según dirección (1 = horario,
-     * -1 = reverse) y si hay que saltar un turno (skip).
-     * Usa módulo seguro para nunca devolver un índice negativo.
+    /** IndexCalculate next player with direccion (1 = normal, -1 = reverse) skip turn
+     * don't use index negative
      * */
     const getNextPlayerIndex = (currentIndex, totalPlayers, direction = 1, skip = false) => {
         const step = skip ? 2 : 1;

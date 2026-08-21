@@ -14,7 +14,10 @@ import { unoGameRules as createUnoGameRules } from './helpers/unoGameRules.js';
 import { unoCardBuilder as createUnoCardBuilder, unoCardBuilder } from './helpers/unoCardBuilder.js';
 import respond from './logic/monads/respond.js';
 import { parseCardString } from './helpers/parseCardsString.js';
-import {gameRegistryBuilder} from './helpers/gameRegistryBuilder.js';
+import { gameOverviewBuilder as turnOverviewFactory} from './helpers/gameOverviewBuilder.js';
+import { turnRegistryBuilder as turnRegistryFactory} from './helpers/turnRegistryBuilder.js';
+import { getCardEffect } from './helpers/cardEffects.js';
+import { turnResolver } from './helpers/turnResolver.js';
 
 import { authValidator } from './logic/validators/authValidator.js';
 import { playerValidator } from './logic/validators/playerValidator.js';
@@ -77,7 +80,12 @@ export const playerService = createPlayerService({
 // Game
 const builtUnoDeck = createUnoDeck();
 const builtUnoGameRules = createUnoGameRules({ unoDeck: builtUnoDeck, parseCardString });
-const builtGameRegistryBuilder = gameRegistryBuilder({ unoDeck: builtUnoDeck });
+const builtTurnResolver = turnResolver({ unoGameRules: builtUnoGameRules, getCardEffect });
+const builtTurnRegistryBuilder = turnRegistryFactory();
+const builtGameOverviewBuilder = turnOverviewFactory({
+    unoDeck: builtUnoDeck,
+    turnRegistryBuilder: builtTurnRegistryBuilder,
+});
 
 const builtGameValidator = gameValidator({
     gameRepository,
@@ -98,11 +106,14 @@ export const gameService = createGameService({
     cardRepository,
     gamePlayerRepository,
     registryRepository,
+    scoreRepository,
     gameRules: builtGameRules,
     unoDeck: builtUnoDeck,
     unoGameRules: builtUnoGameRules,
     unoCardBuilder: builtUnoCardBuilder,
-    gameRegistryBuilder: builtGameRegistryBuilder,
+    turnResolver: builtTurnResolver,
+    gameOverviewBuilder: builtGameOverviewBuilder,
+    turnRegistryBuilder: builtTurnRegistryBuilder,
     respond,
 });
 
