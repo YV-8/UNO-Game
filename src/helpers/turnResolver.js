@@ -1,31 +1,25 @@
-export const turnResolver = ({ unoGameRules }) => {
-    const resolveDirection = (currentDirection, card) =>
-        unoGameRules.isReverseCard(card) ? currentDirection * -1 : currentDirection;
-
-    const resolveSkip = (card, drawPenalty, totalPlayers, isReverse) =>
-        unoGameRules.isSkipCard(card) || drawPenalty > 0 || (isReverse && totalPlayers === 2);
-
-    /** Turno después de jugar una carta con posible efecto (skip/reverse/+2/+4). */
+export const turnResolver = ({ unoGameRules, getCardEffect }) => {
+    /** turn after throw a card possible => (skip/reverse/+2/+4). */
     const resolveNextTurn = ({ activePlayers, currentIndex, direction, targetCard }) => {
         const totalPlayers = activePlayers.length;
-        const isReverse = unoGameRules.isReverseCard(targetCard);
-        const newDirection = resolveDirection(direction, targetCard);
-        const drawPenalty = unoGameRules.getDrawPenalty(targetCard);
-        const skipTurn = resolveSkip(targetCard, drawPenalty, totalPlayers, isReverse);
+        const effect = getCardEffect(targetCard)({ direction });
 
-        const penalizedIndex = drawPenalty > 0
-            ? unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, newDirection, false)
+        // Caso de contexto de partida que cardEffects (puro por carta) no puede conocer
+        const isTwoPlayerReverse = targetCard.value === 'reverse' && totalPlayers === 2;
+        const skipTurn = effect.skipNext || isTwoPlayerReverse;
+
+        const penalizedIndex = effect.drawPenalty > 0
+            ? unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, effect.direction, false)
             : null;
-        const nextIndex = unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, newDirection, skipTurn);
+        const nextIndex = unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, effect.direction, skipTurn);
 
         return {
-            newDirection,
-            drawPenalty,
+            newDirection: effect.direction,
+            drawPenalty: effect.drawPenalty,
             penalizedPlayerId: penalizedIndex !== null ? activePlayers[penalizedIndex].playerId : null,
             nextPlayerId: activePlayers[nextIndex].playerId,
         };
     };
-
     /** Turno simple (robar carta, sin efectos): solo avanza al siguiente. */
     const resolveNextPlayer = (activePlayers, currentIndex, direction) => {
         const nextIndex = unoGameRules.getNextPlayerIndex(currentIndex, activePlayers.length, direction, false);

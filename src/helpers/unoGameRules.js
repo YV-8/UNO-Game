@@ -110,33 +110,3 @@ export const unoGameRules = ({ unoDeck, parseCardString }) => {
         getDrawPenalty, reshuffleDiscardIntoDeck,isSkipCard,isReverseCard,isDrawCard,isWildCard,
     };
 };
-
-// /**
-//  * Saca `count` cartas del deck. Si el deck no alcanza, devuelve lo que
-//  * haya disponible (el llamador decide si reshuffle-ar el descarte antes).
-//  */
-// export const drawCards = (deck, count) => {
-//     const drawn = deck.slice(0, count);
-//     const remainingDeck = deck.slice(count);
-//     return { drawn, remainingDeck };
-// };
-
-// /**
-//  * Envuelve drawCards + reshuffle automático: si el deck no tiene
-//  * suficientes cartas, primero rearma el mazo desde el descarte.
-//  */
-// export const drawCardsWithReshuffle = (deck, discardPile, count) => {
-//     if (deck.length >= count) {
-//         return { ...drawCards(deck, count), discardPile };
-//     }
-
-//     const { newDeck, keptTopCard } = reshuffleDiscardIntoDeck(discardPile);
-//     const mergedDeck = [...deck, ...newDeck];
-//     const { drawn, remainingDeck } = drawCards(mergedDeck, count);
-
-//     return {
-//         drawn,
-//         remainingDeck,
-//         discardPile: keptTopCard ? [keptTopCard] : [],
-//     };
-// };

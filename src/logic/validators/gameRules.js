@@ -39,10 +39,15 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameExists,
         gameValidator.validateTopCardExists
     ),
+        validateGetGameScores: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
     validatePlayCard: composeAsyncValidators(
         gameValidator.validateGameExists,
         gameValidator.validateGameNotFinished,
         gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
         gameValidator.validateTurnOrder,
         gameValidator.validateCardInHand,
         gameValidator.validateChosenColorForWild,
@@ -56,6 +61,7 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameExists,
         gameValidator.validateGameNotFinished,
         gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
         gameValidator.validateTurnOrder,
         gameValidator.validateNoPlayableCard
     ),
@@ -67,6 +73,7 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameExists,
         gameValidator.validateGameNotFinished,
         gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
         gameValidator.validateCanSayUno
     ),
     validateChallengeUno: composeAsyncValidators(
@@ -74,6 +81,7 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameNotFinished,
         gameValidator.validateActivePlayer,
         gameValidator.validateChallengedPlayerExists,
+        gameValidator.validateNotSelfChallenge,
         gameValidator.validateChallengeIsValid
     ),
 });

@@ -181,6 +181,17 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
         return Respond.Ok({ ...data, topDiscard });
     },
 
+    validateBodyPlayerMatchesToken: async (data) => {
+        const { gamePlayer, bodyUsername } = data;
+        if (bodyUsername !== undefined && bodyUsername !== null && gamePlayer.username !== bodyUsername) {
+            return Respond.Err({
+                statusCode: 403,
+                message: 'The player in the request body does not match the authenticated user',
+            });
+        }
+        return Respond.Ok(data);
+    },
+
     validateCanSayUno: async (data) => {
         const { game, playerId } = data;
         const handCount = await cardRepository.countByGameAndPlayer(game.id, playerId, 'hand');
@@ -210,6 +221,13 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
                 statusCode: 400,
                 message: `Challenge failed. ${challengedPlayer.username} said UNO on time.`,
             });
+        }
+        return Respond.Ok(data);
+    },
+    validateNotSelfChallenge: async (data) => {
+        const { playerId, challengedPlayer } = data;
+        if (challengedPlayer.playerId === playerId) {
+            return Respond.Err({ statusCode: 400, message: 'You cannot challenge yourself' });
         }
         return Respond.Ok(data);
     },

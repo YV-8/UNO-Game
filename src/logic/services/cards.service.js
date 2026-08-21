@@ -51,12 +51,6 @@ export const cardService = ({ cardRepository, cardRules, formatCard, respond }) 
     return respond.Ok({ topCard: unoDeck.formatCard(topCard) });
   };
 
-  const getTopCard = async (gameId) => {
-    const topCard = await cardRepository.findTopDiscardByGameId(gameId);
-    if (!topCard) return respond.Err({ statusCode: 404, message: 'No discard pile found for this game' });
-    return respond.Ok({ game_id: gameId, top_card: unoDeck.formatCard(topCard) });
-  };
-
   // para cuando implementes las penalizaciones de robar cartas en playCard
   const drawCards = async (gameId, playerId, count) => {
     let deck = await cardRepository.findDeckByGameId(gameId);
@@ -83,5 +77,5 @@ export const cardService = ({ cardRepository, cardRules, formatCard, respond }) 
     return respond.Ok(drawnCards.map(unoDeck.formatCard));
   };
 
-  return { getAllCards, getCardById, createCard, updateCard, deleteCard, initializeGameCards, getTopCard, drawCards};
+  return { getAllCards, getCardById, createCard, updateCard, deleteCard, initializeGameCards, drawCards};
 };

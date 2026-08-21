@@ -29,4 +29,11 @@ export const cardRules = (cardValidator) => ({
         cardValidator.validateGameExistsForTopCard
     ),
 
+    validateDealInitialCards: composeAsyncValidators(
+        cardValidator.validateGameIdProvided,
+        cardValidator.validateGameExistsById,
+        cardValidator.validateGameInProgress,
+        cardValidator.validateCardsNotDealtYet
+    ),
+
 });

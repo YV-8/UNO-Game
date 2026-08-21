@@ -38,27 +38,10 @@ class CardRepository {
     }
 
     async findByPlayerCardHand(gameId, playerId, color, value) {
-        console.log('🔍 buscando carta:', { gameId, playerId, color, value });
         return await Card.findOne({
             where: { gameId, playerId, location: 'hand', color, value },
         });
     }
-
-    // async findByPlayerCardHand(gameId, playerId, color, value) {
-    //     console.log('🔍 Buscando carta:', { gameId, playerId, color, value });
-
-    //     // Aseguramos que los IDs sean números y los textos sean strings exactos
-    //     const card = await Card.findOne({
-    //         where: {
-    //             gameId: Number(gameId),
-    //             playerId: Number(playerId),
-    //             location: 'hand',
-    //             color: color ? String(color).toLowerCase() : null,
-    //             value: String(value),
-    //         },
-    //     });
-    //     return card;
-    // }
 
     async findDeckByGameId(gameId) {
         return await Card.findAll({ where: { gameId, location: 'deck' } });

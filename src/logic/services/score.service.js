@@ -42,6 +42,24 @@ export const scoreService = ({ scoreRepository, scoreRules, validationresponde, 
         if (!deleted) return responde.Err({ statusCode: 404, message: 'Score not found' });
         return respond.Ok({});
     };
+    const getScores = async (id) => {
+        const numGameId = Number(id);
+        if (!numGameId) return respond.Err({ statusCode: 400, message: 'ID is required' });
 
-    return { getAllScores, getScoreById, createScore, updateScore, deleteScore };
+        const [game, activePlayers, scoreRows] = await Promise.all([
+            gameRepository.findById(numGameId),
+            gamePlayerRepository.findAllByGameId(numGameId),
+            scoreRepository.findAllByGameId(numGameId),
+        ]);
+        if (!game) return respond.Err({ statusCode: 404, message: 'Game not found' });
+
+        const usernameByPlayerId = Object.fromEntries(activePlayers.map((p) => [p.playerId, p.username]));
+        const scores = Object.fromEntries(
+            scoreRows.map((row) => [usernameByPlayerId[row.playerId] ?? `Player ${row.playerId}`, row.score])
+        );
+
+        return respond.Ok({ scores });
+    };
+
+    return { getAllScores, getScoreById, createScore, updateScore, deleteScore, getScores };
 };

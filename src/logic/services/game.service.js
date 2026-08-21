@@ -1,5 +1,5 @@
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
-export const gameService = ({ gameRepository, cardRepository, registryRepository, gameRules, gamePlayerRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, gameRegistryBuilder, respond }) => {
+export const gameService = ({ gameRepository, cardRepository, registryRepository, gameRules, gamePlayerRepository, scoreRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, gameOverviewBuilder, turnResolver, turnRegistryBuilder, respond }) => {
     const getAllGame = async () => {
         const games = await gameRepository.findAll();
         return respond.Ok(games);
@@ -90,16 +90,22 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         return respond.Ok({ game_id: game.id, current_player: game.currentPlayer.username });
     };
 
-    const getGameScores = async (id) => {
-        const numGameId = Number(id);
-        if (!numGameId) return respond.Err({ statusCode: 400, message: 'ID is required' });
-        const game = await gameRepository.findById(numGameId);
+    const getScores = async ({ gameId, playerId }) => {
+        const validation = await gameRules.validateGetGameScores({ gameId, playerId });
+        if (validation.isErr()) return validation;
 
-        if (!game) return respond.Err({ statusCode: 404, message: 'Game not found' });
-        const gamePlayers = await gamePlayerRepository.findAllByGameId(numGameId);
-        const scores = {};
-        gamePlayers.forEach((gp) => { scores[gp.username] = gp.score; });
-        return respond.Ok({ game_id: game.id, scores });
+        const { game } = validation.value;
+        const [activePlayers, scoreRows] = await Promise.all([
+            gamePlayerRepository.findAllByGameId(game.id),
+            scoreRepository.findAllByGameId(game.id),
+        ]);
+
+        const scoreByPlayerId = Object.fromEntries(scoreRows.map((row) => [row.playerId, row.score]));
+        const scores = Object.fromEntries(
+            activePlayers.map((p) => [p.username, scoreByPlayerId[p.playerId] ?? 0])
+        );
+
+        return respond.Ok({ scores });
     };
 
     const startGame = async (gameId, playerId) => {
@@ -182,8 +188,8 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
      * review activePlayer, currentIndex, and total players
      * direction card reverse, drwaPenalty, skipTurn
     */
-    const playCard = async ({ gameId, playerId, cardPlayedStr, chosenColor = null }) => {
-        const validation = await gameRules.validatePlayCard({ gameId, playerId, cardPlayedStr, chosenColor });
+    const playCard = async ({ gameId, playerId, cardPlayedStr, chosenColor = null, bodyUsername }) => {
+        const validation = await gameRules.validatePlayCard({ gameId, playerId, cardPlayedStr, chosenColor, bodyUsername });
         if (validation.isErr()) return validation;
 
         const { game, playerCard, targetCard, topDiscard, chosenColor: validColor } = validation.value;
@@ -218,11 +224,15 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         const nextIndex = unoGameRules.getNextPlayerIndex(currentIndex, totalPlayers, newDirection, skipTurn);
         const nextPlayerId = activePlayers[nextIndex].playerId;
 
-        const remainingCards = await cardRepository.countByGameAndPlayer(gameId, playerId, 'hand');
+        const remainingCards = await cardRepository.countByGameAndPlayer(game.id, playerId, 'hand');
         const updateData = { currentPlayerId: nextPlayerId, direction: newDirection };
         if (remainingCards === 0) { updateData.state = 'finished' };
         await gameRepository.update(game.id, updateData);
 
+        let pointsEarned = 0;
+        if (remainingCards === 0) {
+            pointsEarned = await awardWinnerScore({ gameId: game.id, winnerPlayerId: playerId, activePlayers });
+        }
         await registryRepository.create({
             gameId: game.id,
             playerId,
@@ -230,7 +240,9 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
             details: { card: unoDeck.formatCard(targetCard), chosenColor: validColor },
         });
         return respond.Ok({
-            message: remainingCards === 0 ? 'You played your last card! You win!' : 'Card played successfully.',
+            message: remainingCards === 0
+                ? `You played your last card! You win! You earned ${pointsEarned} points`
+                : 'Card played successfully',
             nextPlayer: activePlayers.find((p) => p.playerId === nextPlayerId)?.username,
         });
     };
@@ -245,8 +257,8 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         return respond.Ok({ game_id: game.id, top_card: unoDeck.formatCard(topCard) });
     };
 
-    const drawCard = async ({ gameId, playerId }) => {
-        const validation = await gameRules.validateDrawCard({ gameId, playerId });
+    const drawCard = async ({ gameId, playerId, bodyUsername }) => {
+        const validation = await gameRules.validateDrawCard({ gameId, playerId, bodyUsername });
         if (validation.isErr()) return validation;
 
         const { game } = validation.value;
@@ -282,68 +294,62 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         });
     };
 
-    const formatRegistryAction = (entry) => {
-        if (entry.move === 'play_card') return `Played ${entry.details?.card}`;
-        if (entry.move === 'draw_card') return 'Drew a card';
-        return entry.move;
+    const fetchRegistryContext = async (gameId) => {
+        const [activePlayers, moves] = await Promise.all([
+            gamePlayerRepository.findAllByGameId(gameId),
+            registryRepository.findByGameId(gameId),
+        ]);
+        return { activePlayers, moves };
     };
 
-    // const getGameOverview = async ({ gameId, playerId }) => {
-    //     const validation = await gameRules.validateGetGameOverview({ gameId, playerId });
-    //     if (validation.isErr()) return validation;
-
-    //     const { game } = validation.value;
-
-    //     const [activePlayers, topDiscard, moves] = await Promise.all([
-    //         gamePlayerRepository.findAllByGameId(game.id),
-    //         cardRepository.findTopDiscardByGameId(game.id),
-    //         registryRepository.findByGameId(game.id),
-    //     ]);
-
-    //     const usernameByPlayerId = Object.fromEntries(activePlayers.map((p) => [p.playerId, p.username]));
-
-    //     const hands = {};
-    //     await Promise.all(
-    //         activePlayers.map(async (player) => {
-    //             const hand = await cardRepository.findHandByGameAndPlayer(game.id, player.playerId);
-    //             hands[player.username] = hand.map(unoDeck.formatCard);
-    //         })
-    //     );
-
-    //     const currentPlayer = activePlayers.find((p) => p.playerId === game.currentPlayerId);
-
-    //     return respond.Ok({
-    //         currentPlayer: currentPlayer?.username ?? null,
-    //         topCard: topDiscard ? unoDeck.formatCard(topDiscard) : null,
-    //         hands,
-    //         turnHistory: moves.map((entry) => ({
-    //             player: usernameByPlayerId[entry.playerId] ?? `Player ${entry.playerId}`,
-    //             action: formatRegistryAction(entry),
-    //         })),
-    //     });
-    // };
-
+    /** use the promise all because finAllByGameId, finTop Discard By Id and findGaeById
+     * they're separates, so await block then promise responde
+     */
     const getGameOverview = async ({ gameId, playerId }) => {
         const validation = await gameRules.validateGetGameOverview({ gameId, playerId });
         if (validation.isErr()) return validation;
-
         const { game } = validation.value;
-        const [activePlayers, topDiscard, moves] = await Promise.all([
-            gamePlayerRepository.findAllByGameId(game.id),
+
+        const [{ activePlayers, moves }, topDiscard] = await Promise.all([
+            fetchRegistryContext(game.id),
             cardRepository.findTopDiscardByGameId(game.id),
-            registryRepository.findByGameId(game.id),
         ]);
 
         const handsEntries = await Promise.all(
-            activePlayers.map(async (p) => [p.playerId, await cardRepository.findHandByGameAndPlayer(game.id, p.playerId)])
+            activePlayers.map(async (p) => {
+                if (p.playerId === playerId) {
+                    const cards = await cardRepository.findHandByGameAndPlayer(game.id, p.playerId);
+                    return [p.playerId, { count: cards.length, cards }];
+                }
+                const count = await cardRepository.countByGameAndPlayer(game.id, p.playerId, 'hand');
+                return [p.playerId, { count, cards: null }];
+            })
         );
         const handsByPlayerId = Object.fromEntries(handsEntries);
 
-        return respond.Ok(gameRegistryBuilder.build({ game, activePlayers, topDiscard, handsByPlayerId, moves }));
+        return respond.Ok(
+            gameOverviewBuilder.build({
+                game,
+                activePlayers,
+                topDiscard,
+                handsByPlayerId,
+                moves,
+                viewerPlayerId: playerId,
+            })
+        );
     };
 
-    const sayUno = async ({ gameId, playerId }) => {
-        const validation = await gameRules.validateSayUno({ gameId, playerId });
+    const getGameRegistry = async ({ gameId, playerId }) => {
+        const validation = await gameRules.validateGetGameOverview({ gameId, playerId });
+        if (validation.isErr()) return validation;
+        const { game } = validation.value;
+
+        const { activePlayers, moves } = await fetchRegistryContext(game.id);
+        return respond.Ok(turnRegistryBuilder.build({ moves, activePlayers }));
+    };
+
+    const sayUno = async ({ gameId, playerId, bodyUsername }) => {
+        const validation = await gameRules.validateSayUno({ gameId, playerId, bodyUsername });
         if (validation.isErr()) return validation;
 
         const { game, gamePlayer } = validation.value;
@@ -354,34 +360,55 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         return respond.Ok({ message: `${gamePlayer.username} said UNO successfully.` });
     };
 
-    const challengeUno = async ({ gameId, playerId, challengedUsername }) => {
-    const validation = await gameRules.validateChallengeUno({ gameId, playerId, challengedUsername });
-    if (validation.isErr()) return validation;
+    const challengeUno = async ({ gameId, playerId, challengedUsername, bodyUsername }) => {
+        const validation = await gameRules.validateChallengeUno({ gameId, playerId, challengedUsername, bodyUsername });
+        if (validation.isErr()) return validation;
 
-    const { game, challengedPlayer } = validation.value;
+        const { game, challengedPlayer } = validation.value;
 
-    await unoCardBuilder.drawCards({ gameId: game.id, playerId: challengedPlayer.playerId, count: 2 });
-    await gamePlayerRepository.update(challengedPlayer.id, { sayOne: false });
+        await unoCardBuilder.drawCards({ gameId: game.id, playerId: challengedPlayer.playerId, count: 2 });
+        await gamePlayerRepository.update(challengedPlayer.id, { sayOne: false });
 
-    await registryRepository.create({
-        gameId: game.id,
-        playerId,
-        move: 'challenge_uno',
-        details: { challenged: challengedPlayer.username, result: 'success' },
-    });
+        await registryRepository.create({
+            gameId: game.id,
+            playerId,
+            move: 'challenge_uno',
+            details: { challenged: challengedPlayer.username, result: 'success' },
+        });
 
-    const currentPlayerRow = await gamePlayerRepository.findByGameAndPlayer(game.id, game.currentPlayerId);
+        const currentPlayerRow = await gamePlayerRepository.findByGameAndPlayer(game.id, game.currentPlayerId);
 
-    return respond.Ok({
-        message: `Challenge successful. ${challengedPlayer.username} forgot to say UNO and draws 2 cards.`,
-        nextPlayer: currentPlayerRow?.username ?? null,
-    });
-};
+        return respond.Ok({
+            message: `Challenge successful. ${challengedPlayer.username} forgot to say UNO and draws 2 cards.`,
+            nextPlayer: currentPlayerRow?.username ?? null,
+        });
+    };
+
+    const awardWinnerScore = async ({ gameId, winnerPlayerId, activePlayers }) => {
+        const opponentIds = activePlayers
+            .filter((p) => p.playerId !== winnerPlayerId)
+            .map((p) => p.playerId);
+
+        const opponentHands = await Promise.all(
+            opponentIds.map((pid) => cardRepository.findHandByGameAndPlayer(gameId, pid))
+        );
+
+        const pointsEarned = opponentHands
+            .flat()
+            .reduce((total, card) => total + unoDeck.getCardPoints(card.value), 0);
+
+        const existingScore = await scoreRepository.findByGameAndPlayer(gameId, winnerPlayerId);
+        if (existingScore) {
+            await scoreRepository.update(existingScore.id, { score: existingScore.score + pointsEarned });
+        } else {
+            await scoreRepository.create({ gameId, playerId: winnerPlayerId, score: pointsEarned });
+        }
+
+        return pointsEarned;
+    };
+
     return {
-        getAllGame, getGameById, createGame, updateGame, deleteGame, getGameState, getGamePlayers, getCurrentPlayer, getGameScores,
-        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getPlayerHand, drawCard, getGameOverview, sayUno, challengeUno
+        getAllGame, getGameById, createGame, updateGame, deleteGame, getGameState, getGamePlayers, getCurrentPlayer,
+        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getPlayerHand, drawCard, getGameOverview, getGameRegistry, sayUno, challengeUno, getScores
     };
 };
-
-
-
