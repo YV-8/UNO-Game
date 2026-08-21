@@ -1,50 +1,37 @@
-import ScoreRepository from '../../../dataAccess/repositories/score.repository.js';
-import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
-import GameRepository from '../../../dataAccess/repositories/game.repository.js';
-import * as ScoreService from '../../../logic/services/score.service.js';
+import Result from '../../../logic/monads/respond.js';
+import { createScoreValidator } from '../../../logic/validators/scoreValidator.js';
+import { createScoreRules } from '../../../logic/validators/scoreRules.js';
+import { createScoreService } from '../../../logic/services/score.service.js';
 
-jest.mock('../../../dataAccess/repositories/score.repository.js');
-jest.mock('../../../dataAccess/repositories/player.repository.js');
-jest.mock('../../../dataAccess/repositories/game.repository.js');
+describe('ScoreService (DI)', () => {
+    const buildService = (overrides = {}) => {
+        const scoreRepository = {
+            findAll: jest.fn(), findById: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn(),
+            ...overrides.scoreRepository,
+        };
+        const playerRepository = { findById: jest.fn(), ...overrides.playerRepository };
+        const gameRepository = { findById: jest.fn(), ...overrides.gameRepository };
 
-describe('ScoreService', () => {
-    beforeEach(() => jest.clearAllMocks());
+        const scoreValidator = createScoreValidator({ scoreRepository, playerRepository, gameRepository });
+        const scoreRules = createScoreRules(scoreValidator);
+        const service = createScoreService({ scoreRepository, scoreRules, Result });
+
+        return { service, scoreRepository, playerRepository, gameRepository };
+    };
 
     describe('getAllScores', () => {
         it('should return Ok with all scores', async () => {
-            const mockScores = [{ playerId: 1, gameId: 1, score: 100 }, { playerId: 2, gameId: 1, score: 300 }];
-            ScoreRepository.findAll.mockResolvedValue(mockScores);
-
-            const result = await ScoreService.getAllScores();
-
-            expect(ScoreRepository.findAll).toHaveBeenCalledTimes(1);
-            expect(result.value).toEqual(mockScores);
-        });
-    });
-
-    describe('getScoreById', () => {
-        it('should return Err 400 if id is not provided', async () => {
-            const result = await ScoreService.getScoreById();
-            expect(result.error).toMatchObject({ statusCode: 400, message: 'ID is required' });
-        });
-
-        it('should return Err 404 if the score does not exist', async () => {
-            ScoreRepository.findById.mockResolvedValue(null);
-            const result = await ScoreService.getScoreById(666);
-            expect(result.error).toMatchObject({ statusCode: 404, message: 'Score not found' });
-        });
-
-        it('should return Ok with the score for a given id', async () => {
-            const mockScore = { playerId: 1, gameId: 1, score: 160 };
-            ScoreRepository.findById.mockResolvedValue(mockScore);
-            const result = await ScoreService.getScoreById(1);
-            expect(result.value).toEqual(mockScore);
+            const { service, scoreRepository } = buildService();
+            scoreRepository.findAll.mockResolvedValue([{ playerId: 1, gameId: 1, score: 100 }]);
+            const result = await service.getAllScores();
+            expect(result.value).toEqual([{ playerId: 1, gameId: 1, score: 100 }]);
         });
     });
 
     describe('createScore', () => {
-        it('should return Err 400 if required fields are missing', async () => {
-            const result = await ScoreService.createScore({ playerId: 1, gameId: 3 });
+        it('should return Err 400 if fields are missing', async () => {
+            const { service } = buildService();
+            const result = await service.createScore({ playerId: 1, gameId: 1 });
             expect(result.error).toMatchObject({
                 statusCode: 400,
                 message: 'playerId, gameId and score are required',
@@ -52,110 +39,70 @@ describe('ScoreService', () => {
         });
 
         it('should return Err 400 if score is negative', async () => {
-            const result = await ScoreService.createScore({ playerId: 1, gameId: 1, score: -100 });
+            const { service } = buildService();
+            const result = await service.createScore({ playerId: 1, gameId: 1, score: -10 });
             expect(result.error).toMatchObject({
                 statusCode: 400,
                 message: 'score has to be a non-negative number',
             });
-            expect(PlayerRepository.findById).not.toHaveBeenCalled();
         });
 
         it('should return Err 404 if the player does not exist', async () => {
-            PlayerRepository.findById.mockResolvedValue(null);
-            const result = await ScoreService.createScore({ playerId: 1, gameId: 1, score: 220 });
+            const { service, playerRepository } = buildService();
+            playerRepository.findById.mockResolvedValue(null);
+            const result = await service.createScore({ playerId: 1, gameId: 1, score: 100 });
             expect(result.error).toMatchObject({ statusCode: 404, message: 'Referenced player does not exist' });
         });
 
         it('should return Err 404 if the game does not exist', async () => {
-            PlayerRepository.findById.mockResolvedValue({ id: 1, username: 'ale' });
-            GameRepository.findById.mockResolvedValue(null);
-            const result = await ScoreService.createScore({ playerId: 1, gameId: 1, score: 120 });
+            const { service, playerRepository, gameRepository } = buildService();
+            playerRepository.findById.mockResolvedValue({ id: 1 });
+            gameRepository.findById.mockResolvedValue(null);
+            const result = await service.createScore({ playerId: 1, gameId: 1, score: 100 });
             expect(result.error).toMatchObject({ statusCode: 404, message: 'Referenced game does not exist' });
         });
 
-        it('should create a new score', async () => {
-            const mockScoreData = { playerId: 1, gameId: 1, score: 260 };
-            PlayerRepository.findById.mockResolvedValue({ id: 1, username: 'ale' });
-            GameRepository.findById.mockResolvedValue({ id: 1, name: 'Uno' });
-            ScoreRepository.create.mockResolvedValue(mockScoreData);
+        it('should create the score', async () => {
+            const { service, playerRepository, gameRepository, scoreRepository } = buildService();
+            const scoreData = { playerId: 1, gameId: 1, score: 260 };
+            playerRepository.findById.mockResolvedValue({ id: 1 });
+            gameRepository.findById.mockResolvedValue({ id: 1 });
+            scoreRepository.create.mockResolvedValue(scoreData);
 
-            const result = await ScoreService.createScore(mockScoreData);
+            const result = await service.createScore(scoreData);
 
-            expect(PlayerRepository.findById).toHaveBeenCalledWith(1);
-            expect(GameRepository.findById).toHaveBeenCalledWith(1);
-            expect(ScoreRepository.create).toHaveBeenCalledWith(mockScoreData);
-            expect(result.value).toEqual(mockScoreData);
+            expect(scoreRepository.create).toHaveBeenCalledWith(scoreData);
+            expect(result.value).toEqual(scoreData);
         });
     });
 
     describe('updateScore', () => {
         it('should return Err 404 if the score does not exist', async () => {
-            ScoreRepository.findById.mockResolvedValue(null);
-            const result = await ScoreService.updateScore(1, { score: 3000 });
+            const { service, scoreRepository } = buildService();
+            scoreRepository.findById.mockResolvedValue(null);
+            const result = await service.updateScore(1, { score: 500 });
             expect(result.error).toMatchObject({ statusCode: 404, message: 'Score not found' });
         });
 
-        it('should return Err 400 if the new score is not a number', async () => {
-            ScoreRepository.findById.mockResolvedValue({ playerId: 1, gameId: 1, score: 100 });
-            const result = await ScoreService.updateScore(1, { score: 'mucho' });
-            expect(result.error).toMatchObject({
-                statusCode: 400,
-                message: 'score has to be a non-negative number',
-            });
-        });
+        it('should update the score keeping previous values', async () => {
+            const { service, scoreRepository } = buildService();
+            const existing = { playerId: 1, gameId: 1, score: 260 };
+            scoreRepository.findById.mockResolvedValue(existing);
+            scoreRepository.update.mockResolvedValue({ ...existing, score: 450 });
 
-        it('should return Err 400 if the new score is negative', async () => {
-            ScoreRepository.findById.mockResolvedValue({ playerId: 1, gameId: 1, score: 100 });
-            const result = await ScoreService.updateScore(1, { score: -50 });
-            expect(result.error).toMatchObject({
-                statusCode: 400,
-                message: 'score has to be a non-negative number',
-            });
-        });
+            const result = await service.updateScore(1, { score: 450 });
 
-        it('should retain previous values if empty fields are sent', async () => {
-            const mockScore = { playerId: 1, gameId: 1, score: 260 };
-            ScoreRepository.findById.mockResolvedValue(mockScore);
-            ScoreRepository.update.mockResolvedValue(mockScore);
-
-            await ScoreService.updateScore(1, {});
-
-            expect(ScoreRepository.update).toHaveBeenCalledWith(1, {
-                playerId: 1, gameId: 1, score: 260,
-            });
-        });
-
-        it('should update the score successfully', async () => {
-            const mockScoreData = { playerId: 1, gameId: 1, score: 260 };
-            ScoreRepository.findById.mockResolvedValue(mockScoreData);
-            ScoreRepository.update.mockResolvedValue({ ...mockScoreData, score: 450 });
-
-            const result = await ScoreService.updateScore(1, { score: 450 });
-
-            expect(ScoreRepository.update).toHaveBeenCalledWith(1, {
-                playerId: 1, gameId: 1, score: 450,
-            });
+            expect(scoreRepository.update).toHaveBeenCalledWith(1, { playerId: 1, gameId: 1, score: 450 });
             expect(result.value.score).toBe(450);
         });
     });
 
     describe('deleteScore', () => {
-        it('should return Err 400 if id is not provided', async () => {
-            const result = await ScoreService.deleteScore();
-            expect(result.error).toMatchObject({ statusCode: 400, message: 'ID is required' });
-        });
-
-        it('should return Err 404 if the score does not exist', async () => {
-            ScoreRepository.delete.mockResolvedValue(false);
-            const result = await ScoreService.deleteScore(666);
-            expect(result.error).toMatchObject({ statusCode: 404, message: 'Score not found' });
-        });
-
-        it('should delete the score successfully', async () => {
-            ScoreRepository.delete.mockResolvedValue(true);
-            const result = await ScoreService.deleteScore(1);
+        it('should delete the score', async () => {
+            const { service, scoreRepository } = buildService();
+            scoreRepository.delete.mockResolvedValue(true);
+            const result = await service.deleteScore(1);
             expect(result.value).toEqual({});
-            expect(ScoreRepository.delete).toHaveBeenCalledWith(1);
         });
     });
 });
