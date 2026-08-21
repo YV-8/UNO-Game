@@ -63,9 +63,9 @@ export const leave = async (req, res) => {
 };
 
 export const getTopCard = async (req, res) => {
-    const id = Number(req.body?.game_id);
-    const result = await gameService.getTopCard(id);
-    return handleResult(res, result, 200);
+  const id = Number(req.body?.game_id);
+  const result = await gameService.getTopCard(id);
+  return handleResult(res, result, 200);
 };
 
 /**
@@ -97,70 +97,86 @@ export const getGameScores = async (req, res) => {
   return handleResult(res, result, 200);
 };
 
-export const playCard = async (req,res) => {
-const gameId = Number(req.params.id);
-const { cardPlayed, chosenColor } = req.body;
-  const { id: playerId } = req.player;
-  const result = await gameService.playCard({gameId, playerId,cardPlayedStr: cardPlayed, chosenColor});
-  return handleResult(res,result,200);
+export const playCard = async (req, res) => {
+  const result = await gameService.playCard({
+        gameId: req.params.id,
+        playerId: req.player.id,
+        cardPlayedStr: req.body.cardPlayed,
+        chosenColor: req.body.chosenColor,
+        bodyUsername: req.body.player,
+    });
+  return handleResult(res, result, 200);
 };
 
 export const getMyHand = async (req, res) => {
-    const gameId = req.params.id;
-    const playerId = req.player.id;
+  const gameId = req.params.id;
+  const playerId = req.player.id;
 
-    const result = await gameService.getPlayerHand({ gameId, playerId });
-    if (result.isErr()) {
-        const { statusCode, message } = result.error;
-        return res.status(statusCode).json({ message });
-    }
-    return res.status(200).json(result.value);
+  const result = await gameService.getPlayerHand({ gameId, playerId });
+  return handleResult(res, result, 200);
 };
 
 export const drawCard = async (req, res) => {
-    const gameId = req.params.id;
-    const playerId = req.player.id;
+  // const gameId = req.params.id;
+  // const playerId = req.player.id;
 
-    const result = await gameService.drawCard({ gameId, playerId });
-    if (result.isErr()) {
-        const { statusCode, message } = result.error;
-        return res.status(statusCode).json({ message });
-    }
-    return res.status(200).json(result.value);
+  // const result = await gameService.drawCard({ gameId, playerId });
+  const result = await gameService.drawCard({
+        gameId: req.params.id,
+        playerId: req.player.id,
+        bodyUsername: req.body.player,
+    });
+  return handleResult(res, result, 200);
 };
 
 export const getGameOverview = async (req, res) => {
-    const gameId = req.params.id;
-    const playerId = req.player.id;
+  const gameId = req.params.id;
+  const playerId = req.player.id;
 
-    const result = await gameService.getGameOverview({ gameId, playerId });
-    if (result.isErr()) {
-        const { statusCode, message } = result.error;
-        return res.status(statusCode).json({ message });
-    }
-    return res.status(200).json(result.value);
+  const result = await gameService.getGameOverview({ gameId, playerId });
+  if (result.isErr()) {
+    const { statusCode, message } = result.error;
+    return res.status(statusCode).json({ message });
+  }
+  return res.status(200).json(result.value);
+};
+
+export const getGameRegistry = async (req, res) => {
+  const gameId = req.params.id;
+  const playerId = req.player.id;
+  const result = await gameService.getGameRegistry({ gameId, playerId });
+  return handleResult(res, result, 200);
 };
 
 export const sayUno = async (req, res) => {
-    const gameId = req.params.id;
-    const playerId = req.player.id;
-    const result = await gameService.sayUno({ gameId, playerId });
-    if (result.isErr()) {
-        const { statusCode, message } = result.error;
-        return res.status(statusCode).json({ message });
-    }
-    return res.status(200).json(result.value);
+  // const gameId = req.params.id;
+  // const playerId = req.player.id;
+  // const result = await gameService.sayUno({ gameId, playerId });
+  const result = await gameService.sayUno({
+        gameId: req.params.id,
+        playerId: req.player.id,
+        bodyUsername: req.body.player,
+    });
+  return handleResult(res, result, 200);
 };
 
 export const challengeUno = async (req, res) => {
-    const gameId = req.params.id;
-    const playerId = req.player.id;
-    const challengedUsername = req.body.challengedPlayer;
+  // const gameId = req.params.id;
+  // const playerId = req.player.id;
+  // const challengedUsername = req.body.challengedPlayer;
 
-    const result = await gameService.challengeUno({ gameId, playerId, challengedUsername });
-    if (result.isErr()) {
-        const { statusCode, message } = result.error;
-        return res.status(statusCode).json({ message });
-    }
-    return res.status(200).json(result.value);
+  // const result = await gameService.challengeUno({ gameId, playerId, challengedUsername });
+  const result = await gameService.challengeUno({
+        gameId: req.params.id, playerId: req.player.id,
+        challengedUsername: req.body.challengedPlayer,
+        bodyUsername: req.body.challenger,
+    });
+  return handleResult(res, result, 200);
 };
+
+export const getGameScore = async (req, res, next) => {
+  const result = await gameService.getScores({
+    gameId: req.params.id, playerId: req.player.id
+  });
+  return handleResult(res, result, 200);
+}
