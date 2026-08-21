@@ -8,7 +8,6 @@ const playerModel = (sequelize, DataTypes) => {
     username: {
       type: DataTypes.STRING(30),
       allowNull: false,
-      unique: true,
     },
     email: {
       type: DataTypes.STRING(60),
@@ -28,7 +27,14 @@ const playerModel = (sequelize, DataTypes) => {
       withPassword: {
         attributes: {}
       }
-    }
+    },
+    indexes: [
+      {
+        unique: true,
+        fields: ['username'],
+        name: 'player_username_unique'
+      }
+    ]
   });
 
   Player.associate = (models) => {
