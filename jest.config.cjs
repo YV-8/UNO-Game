@@ -17,7 +17,7 @@ module.exports = {
     collectCoverageFrom: [
         'src/logic/services/**/*.js',
         'src/logic/monads/**/*.js',
-        'src/helpers/composeAsyncValidators.js',
+        'src/helpers/**/*s',
         'src/presentation/controllers/**/*.js',
         '!src/dataAccess/models/**',
         '!src/dataAccess/database.js'

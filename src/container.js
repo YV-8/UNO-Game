@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import playerRepository from './dataAccess/repositories/player.repository.js';
 import gameRepository from './dataAccess/repositories/game.repository.js';
 import gamePlayerRepository from './dataAccess/repositories/gamePlayer.repository.js';
-import cardRepository from './dataAccess/repositories/cards.repository.js';
+import cardRepository from './dataAccess/repositories/card.repository.js';
 import scoreRepository from './dataAccess/repositories/score.repository.js';
 import registryRepository from './dataAccess/repositories/registry.repository.js';
 
@@ -34,7 +34,7 @@ import { scoreRules } from './logic/validators/scoreRules.js';
 import { authService as createAuthService } from './logic/services/auth.service.js';
 import { playerService as createPlayerService } from './logic/services/player.service.js';
 import { gameService as createGameService } from './logic/services/game.service.js';
-import { cardService as createCardService } from './logic/services/cards.service.js';
+import { cardService as createCardService } from './logic/services/card.service.js';
 import { scoreService as createScoreService } from './logic/services/score.service.js';
 import { Registry } from './dataAccess/models/index.js';
 
