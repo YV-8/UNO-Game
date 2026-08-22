@@ -3,7 +3,7 @@ import sequelize from '../database.js';
 import playerModel from './player.js';
 import gameModel from './game.js';
 import gamePlayerModel from './gameplayer.js';
-import cardModel from './cards.js';
+import cardModel from './card.js';
 import scoreModel from './score.js';
 import registry from './registry.js';
 

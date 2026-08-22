@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as cardsController from '../controllers/cards.controller.js';
+import * as cardsController from '../controllers/card.controller.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
