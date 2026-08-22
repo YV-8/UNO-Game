@@ -1,41 +1,34 @@
-import { composeAsyncValidators } from '../../Helpers/composeAsyncValidators.js';
-import Result from '../../Logic/Monads/result.js';
+import { composeAsyncValidators } from '../../../src/helpers/composeAsyncValidators.js';
+import Respond from '../../../src/logic/monads/respond.js';
 
 describe('composeAsyncValidators', () => {
-    test('runs every validator in order and merges their Ok values into one accumulated object', async () => {
-        const addA = async () => Result.Ok({ a: 1 });
-        const addB = async (data) => Result.Ok({ b: data.a + 1 });
+    test('runs all validators in order and merges their values', async () => {
+        const v1 = jest.fn(async (data) => Respond.Ok({ ...data, a: 1 }));
+        const v2 = jest.fn(async (data) => Respond.Ok({ ...data, b: 2 }));
+        const pipeline = composeAsyncValidators(v1, v2);
 
-        const validate = composeAsyncValidators(addA, addB);
-        const result = await validate({});
+        const result = await pipeline({ start: true });
 
-        expect(result.isOk()).toBe(true);
-        expect(result.value).toEqual({ a: 1, b: 2 });
+        expect(v1).toHaveBeenCalledWith({ start: true });
+        expect(v2).toHaveBeenCalledWith({ start: true, a: 1 });
+        expect(result.value).toEqual({ start: true, a: 1, b: 2 });
     });
 
-    test('stops at the first Err and never runs the remaining validators (short-circuit)', async () => {
-        const ok = jest.fn(async () => Result.Ok({}));
-        const fail = jest.fn(async () => Result.Err({ statusCode: 400, message: 'invalid' }));
-        const neverCalled = jest.fn(async () => Result.Ok({ shouldNot: 'run' }));
+    test('short-circuits on the first Err and does not call later validators', async () => {
+        const v1 = jest.fn(async () => Respond.Err({ statusCode: 400, message: 'fail' }));
+        const v2 = jest.fn(async (data) => Respond.Ok(data));
+        const pipeline = composeAsyncValidators(v1, v2);
 
-        const validate = composeAsyncValidators(ok, fail, neverCalled);
-        const result = await validate({});
+        const result = await pipeline({ start: true });
 
+        expect(v2).not.toHaveBeenCalled();
         expect(result.isErr()).toBe(true);
-        expect(result.error).toEqual({ statusCode: 400, message: 'invalid' });
-        expect(neverCalled).not.toHaveBeenCalled();
+        expect(result.error).toEqual({ statusCode: 400, message: 'fail' });
     });
 
-    test('each validator receives the data accumulated by the previous ones', async () => {
-        const step1 = async (data) => Result.Ok({ ...data, step1: true });
-        const step2 = async (data) => {
-            expect(data.step1).toBe(true); // confirma que llegó lo que dejó step1
-            return Result.Ok({ ...data, step2: true });
-        };
-
-        const validate = composeAsyncValidators(step1, step2);
-        const result = await validate({ initial: 'value' });
-
-        expect(result.value).toEqual({ initial: 'value', step1: true, step2: true });
+    test('returns Ok with the original data when there are no validators', async () => {
+        const pipeline = composeAsyncValidators();
+        const result = await pipeline({ start: true });
+        expect(result.value).toEqual({ start: true });
     });
 });
