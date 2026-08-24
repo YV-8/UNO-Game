@@ -1,11 +1,11 @@
-// import { Server } from 'socket.io';
-// import http from 'http';
+import { Server } from 'socket.io';
+import http from 'http';
 import app from './app.js';
 import dataBase from './dataAccess/database.js';
 import './dataAccess/models/index.js';
 
-// const server = http.createServer(app);
-// const io = new Server(server, { cors: { origin: '*' } });
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
 const PORT = 3000;
 
 const startServer = async () => {

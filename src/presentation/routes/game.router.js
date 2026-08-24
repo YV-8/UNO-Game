@@ -15,7 +15,7 @@ router.put('/:id', gameController.updateGame);
 router.post('/state',gameController.getGameState);
 router.post('/players',gameController.getGamePlayers);
 router.post('/current-player', gameController.getCurrentPlayer);
-router.post('/scores', gameController.getGameScores);
+router.post('/:id/scores', gameController.getGameScores);
 router.post('/top-card', gameController.getTopCard);
 
 router.post('/join', gameController.join);
@@ -29,5 +29,6 @@ router.get('/:id/state', gameController.getGameOverview);
 router.get('/:id/history', gameController.getGameRegistry);
 router.put('/:id/say-uno', gameController.sayUno);
 router.put('/:id/challenge-uno', gameController.challengeUno);
+router.get('/:id/score-game', gameController.getGameScore)
 
 export default router;

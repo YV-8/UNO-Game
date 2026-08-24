@@ -93,7 +93,7 @@ export const getCurrentPlayer = async (req, res) => {
 };
 
 export const getGameScores = async (req, res) => {
-  const result = await gameService.getGameScores(Number(req.body?.game_id));
+  const result = await gameService.getScores(Number(req.body?.game_id));
   return handleResult(res, result, 200);
 };
 
