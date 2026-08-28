@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import * as gameController from '../controllers/game.controller.js';
+//import { wrapControllerWithTracking } from '../../Helpers/withTracking.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { memoizationMiddleware } from '../../middlewares/memoizationMiddleware.js';
-const liveGameCache = createMemoizationMiddleware({ max: 100, maxAge: 5000 });
-const gameListCache = createMemoizationMiddleware({ max: 30, maxAge: 30000 });
+//const gameController = wrapControllerWithTracking(gameControllerRaw);
+const liveGameCache = memoizationMiddleware({ max: 100, maxAge: 5000 });
+const gameListCache = memoizationMiddleware({ max: 30, maxAge: 30000 });
 
 
 const router = Router();
@@ -19,7 +21,7 @@ router.put('/:id', gameController.updateGame);
 router.post('/state', liveGameCache, gameController.getGameState);
 router.post('/players', liveGameCache, gameController.getGamePlayers);
 router.post('/current-player', liveGameCache, gameController.getCurrentPlayer);
-router.post('/:id/scores', liveGameCache, gameController.getGameScores);
+router.post('/:id/scores', liveGameCache, gameController.getGameScore);
 router.post('/top-card', liveGameCache, gameController.getTopCard);
 
 router.post('/join', gameController.join);
@@ -33,6 +35,5 @@ router.get('/:id/state', liveGameCache, gameController.getGameOverview);
 router.get('/:id/history', liveGameCache, gameController.getGameRegistry);
 router.put('/:id/say-uno', gameController.sayUno);
 router.put('/:id/challenge-uno', gameController.challengeUno);
-router.get('/:id/score-game', liveGameCache, gameController.getGameScore);
 
 export default router;
