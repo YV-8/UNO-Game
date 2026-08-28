@@ -26,8 +26,9 @@ export const memoizationMiddleware = ({ max = 50, maxAge = 60000 } = {}) => {
             (oldestIdx, entry, idx) => (entry.lastAccessedAt < cache[oldestIdx].lastAccessedAt ? idx : oldestIdx),
             0
         );
-        const max = cache.splice(oldestIndex, 1);
-        console.log(`Top limit (${max}) input LRU delete: ${evicted.key}`);
+        const evictedList = cache.splice(oldestIndex, 1);
+        const evicted = evictedList[0];
+        console.log(`Top limit (${max}) input LRU delete: ${evicted?.key}`);
     };
 
     const findEntry = (key) => cache.find((entry) => entry.key === key);
