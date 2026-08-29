@@ -1,18 +1,13 @@
 /**
  * wraps a controller so every call to it is logged
- *
- * Design notes:
- * - Timing uses process.hrtime.bigint() (monotonic, not wall-clock) so the
- *   measurement can't be skewed by system clock adjustments.
- * - The log write happens on the 'finish' event, i.e. *after* the response
- *   has already been flushed to the client — tracking never delays a reply.
- * - The log write is fire-and-forget: if apiUsageRepository.create fails,
- *   we log to console and swallow it. A broken stats pipe should never be
- *   able to take down gameplay.
- * - endpointAccess uses req.route + req.baseUrl when available (the actual
- *   route pattern, e.g. "/api/games/:id/play") and falls back to the raw
- *   path for cases where req.route isn't populated yet (rare, e.g. errors
- *   before routing resolves).
+*'finish' .event, that is, after the response
+*was sent
+*the trace never delays a response
+* "fire and forget": if apiUsageRepository.create fails
+* we log it to the console
+* endpointAccess uses req.route + req.baseUrl
+* is able: falls back to the raw route
+* in cases where req.route has not yet completed, it goes directly to processing as an error
  */
 export const trackingMiddleware = ({ apiUsageRepository } = {}) => {
     return (req, res, next) => {

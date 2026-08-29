@@ -2,11 +2,12 @@ import { Router } from "express";
 import * as scoreController from "../controllers/score.controller.js";
 import { authenticate } from '../../middlewares/auth.middleware.js';
 
-const route = Router();
-route.get("/", scoreController.getAllScore);
-route.get("/:id", scoreController.getScoreById);
-route.delete("/:id", scoreController.deleteScore);
+const router = Router();
+router.use(authenticate);
+router.get("/", scoreController.getAllScore);
+router.get("/:id", scoreController.getScoreById);
+router.delete("/:id", scoreController.deleteScore);
 
-route.post("/", authenticate,scoreController.createScore);
-route.put("/:id", authenticate,scoreController.updateScore);
-export default route;
+router.post("/", scoreController.createScore);
+router.put("/:id", scoreController.updateScore);
+export default router;

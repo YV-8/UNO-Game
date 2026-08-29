@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import * as gameController from '../controllers/game.controller.js';
-//import { wrapControllerWithTracking } from '../../Helpers/withTracking.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { memoizationMiddleware } from '../../middlewares/memoizationMiddleware.js';
-//const gameController = wrapControllerWithTracking(gameControllerRaw);
+
 const liveGameCache = memoizationMiddleware({ max: 100, maxAge: 5000 });
 const gameListCache = memoizationMiddleware({ max: 30, maxAge: 30000 });
 
