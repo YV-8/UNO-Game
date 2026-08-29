@@ -1,0 +1,48 @@
+/*
+ * Design tokens. Fonts are loaded in index.html (Google Fonts):
+ * Baloo 2 (display), Inter (body), JetBrains Mono (data/utility).
+ */
+:root {
+    /* Color */
+    --color-soft: #f4f3ef;
+    --color-cream: #fff2bf;
+    --color-mediumSoft:#ece3feaa;
+    --color-dark: #000000;
+    --color-skyblue: #367dc3;
+    --color-mediumSkyblue: #70a7ee;
+    --color-purple: #7216b5;
+    --color-mediumpurple:#580e8d;
+    --color-lightpink: #f895d2;
+    --color-pink: #e671b9c7;
+    --color-darkpink: #4d0130fd;
+    --color-darkred: #690618;
+    --color-lightred: #f0647e;
+    --color-semidarkPurple:#320156af;
+    --color-darkPurple:#1e0034eb;
+    --color-skyPurple: #a964fdc3;
+    --color-lightPurple: #d0a9ffc3;
+    --color-felt: #12372a;
+    --color-felt-soft: #1b4d3a;
+    --color-paper: #f2f5f1;
+    --color-ink: #16211c;
+    --color-red: #e42e2e;
+    --color-yellow: #f2b705;
+    --color-green: #3c9d62;
+    --color-blue: #2e6f95;
+
+    /* Type */
+    --font-display: 'Baloo 2', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Layout */
+    --radius-card: 18px;
+    --radius-input: 10px;
+    --shadow-card: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 40px;
+}
