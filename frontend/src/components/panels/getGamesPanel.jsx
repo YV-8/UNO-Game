@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
 import apiClient from '../../api/client.js';
 
 const GetGamesPanel = () => {

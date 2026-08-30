@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
 import apiClient from '../../api/client.js';
 
-const DeleteGamePanel = () => {
+const UpdateGamePanel = () => {
     const { session } = useAuth();
     const [gameId, setGameId] = useState('');
+    const [name, setName] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
@@ -13,8 +14,8 @@ const DeleteGamePanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.delete(`/games/${gameId}`, session.token);
-            setResult(data ?? { message: 'Deleted.' });
+            const data = await apiClient.put(`/games/${gameId}`, { name }, session.token);
+            setResult(data);
         } catch (err) {
             setError(err.message);
         }
@@ -22,9 +23,9 @@ const DeleteGamePanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--red" />
-            <h2 className="panel__title">Delete game</h2>
-            <p className="panel__hint">DELETE /api/games/:id — this cannot be undone.</p>
+            <div className="panel__edge panel__edge--blue" />
+            <h2 className="panel__title">Update game</h2>
+            <p className="panel__hint">PUT /api/games/:id</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -36,8 +37,17 @@ const DeleteGamePanel = () => {
                         required
                     />
                 </label>
-                <button className="panel__button panel__button--danger" type="submit">
-                    Delete
+                <label className="panel__field">
+                    <span className="panel__label">New name</span>
+                    <input
+                        className="panel__input"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                </label>
+                <button className="panel__button" type="submit">
+                    Update
                 </button>
             </form>
 
@@ -47,4 +57,4 @@ const DeleteGamePanel = () => {
     );
 };
 
-export default DeleteGamePanel;
+export default UpdateGamePanel;

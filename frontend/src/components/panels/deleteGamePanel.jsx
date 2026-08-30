@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useGame } from '../../context/GameContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
 import apiClient from '../../api/client.js';
 
-const GameByIdPanel = () => {
+const DeleteGamePanel = () => {
     const { session } = useAuth();
-    const { setActiveGameId } = useGame();
     const [gameId, setGameId] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
@@ -15,9 +13,8 @@ const GameByIdPanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.get(`/games/${gameId}`, session.token);
-            setResult(data);
-            setActiveGameId(gameId);
+            const data = await apiClient.delete(`/games/${gameId}`, session.token);
+            setResult(data ?? { message: 'Deleted.' });
         } catch (err) {
             setError(err.message);
         }
@@ -25,11 +22,9 @@ const GameByIdPanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--green" />
-            <h2 className="panel__title">Game by ID</h2>
-            <p className="panel__hint">
-                GET /api/games/:id — also sets this as the active game for the sidebar score.
-            </p>
+            <div className="panel__edge panel__edge--red" />
+            <h2 className="panel__title">Delete game</h2>
+            <p className="panel__hint">DELETE /api/games/:id — this cannot be undone.</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -41,8 +36,8 @@ const GameByIdPanel = () => {
                         required
                     />
                 </label>
-                <button className="panel__button" type="submit">
-                    Look up
+                <button className="panel__button panel__button--danger" type="submit">
+                    Delete
                 </button>
             </form>
 
@@ -52,4 +47,4 @@ const GameByIdPanel = () => {
     );
 };
 
-export default GameByIdPanel;
+export default DeleteGamePanel;

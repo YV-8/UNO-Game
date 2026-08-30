@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
+import { useGame } from '../../context/gameContext.jsx';
 import apiClient from '../../api/client.js';
 
-const UpdateGamePanel = () => {
+const GameByIdPanel = () => {
     const { session } = useAuth();
+    const { setActiveGameId } = useGame();
     const [gameId, setGameId] = useState('');
-    const [name, setName] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
@@ -14,8 +15,9 @@ const UpdateGamePanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.put(`/games/${gameId}`, { name }, session.token);
+            const data = await apiClient.get(`/games/${gameId}`, session.token);
             setResult(data);
+            setActiveGameId(gameId);
         } catch (err) {
             setError(err.message);
         }
@@ -23,9 +25,11 @@ const UpdateGamePanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--blue" />
-            <h2 className="panel__title">Update game</h2>
-            <p className="panel__hint">PUT /api/games/:id</p>
+            <div className="panel__edge panel__edge--green" />
+            <h2 className="panel__title">Game by ID</h2>
+            <p className="panel__hint">
+                GET /api/games/:id — also sets this as the active game for the sidebar score.
+            </p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -37,17 +41,8 @@ const UpdateGamePanel = () => {
                         required
                     />
                 </label>
-                <label className="panel__field">
-                    <span className="panel__label">New name</span>
-                    <input
-                        className="panel__input"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                </label>
                 <button className="panel__button" type="submit">
-                    Update
+                    Look up
                 </button>
             </form>
 
@@ -57,4 +52,4 @@ const UpdateGamePanel = () => {
     );
 };
 
-export default UpdateGamePanel;
+export default GameByIdPanel;

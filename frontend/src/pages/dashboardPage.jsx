@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 import TopNav from '../components/layout/TopNav.jsx';
 import Sidebar from '../components/layout/Sidebar.jsx';
 import CreateGamePanel from '../components/panels/CreateGamePanel.jsx';

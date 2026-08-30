@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useGame } from '../../context/GameContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
+import { useGame } from '../../context/gameContext.jsx';
 import apiClient from '../../api/client.js';
 
 const Sidebar = () => {

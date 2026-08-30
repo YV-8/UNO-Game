@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
+import { useGame } from '../../context/gameContext.jsx';
 import apiClient from '../../api/client.js';
 
-const CurrentPlayersPanel = () => {
+const GameStatePanel = () => {
     const { session } = useAuth();
+    const { setActiveGameId } = useGame();
     const [gameId, setGameId] = useState('');
-    const [players, setPlayers] = useState(null);
+    const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
-        setPlayers(null);
+        setResult(null);
         try {
-            const data = await apiClient.post('/games/players', { game_id: Number(gameId) }, session.token);
-            setPlayers(data);
+            const data = await apiClient.get(`/games/${gameId}/state`, session.token);
+            setResult(data);
+            setActiveGameId(gameId);
         } catch (err) {
             setError(err.message);
         }
@@ -22,9 +25,12 @@ const CurrentPlayersPanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--blue" />
-            <h2 className="panel__title">Current players</h2>
-            <p className="panel__hint">POST /api/games/players — every player currently in this game.</p>
+            <div className="panel__edge panel__edge--yellow" />
+            <h2 className="panel__title">State game</h2>
+            <p className="panel__hint">
+                GET /api/games/:id/state — current player, top card, hands (yours in full, rivals as
+                counts), and turn history.
+            </p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -37,14 +43,14 @@ const CurrentPlayersPanel = () => {
                     />
                 </label>
                 <button className="panel__button" type="submit">
-                    Load players
+                    Get state
                 </button>
             </form>
 
             {error && <p className="panel__error">{error}</p>}
-            {players && <pre className="panel__result">{JSON.stringify(players, null, 2)}</pre>}
+            {result && <pre className="panel__result">{JSON.stringify(result, null, 2)}</pre>}
         </section>
     );
 };
 
-export default CurrentPlayersPanel;
+export default GameStatePanel;

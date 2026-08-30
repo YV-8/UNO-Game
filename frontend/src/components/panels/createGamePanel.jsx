@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useGame } from '../../context/GameContext.jsx';
+import { useAuth } from '../../context/authContext.jsx';
 import apiClient from '../../api/client.js';
 
-const GameStatePanel = () => {
+const CreateGamePanel = () => {
     const { session } = useAuth();
-    const { setActiveGameId } = useGame();
-    const [gameId, setGameId] = useState('');
+    const [name, setName] = useState('');
+    const [rules, setRules] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
@@ -15,9 +14,12 @@ const GameStatePanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.get(`/games/${gameId}/state`, session.token);
+            const data = await apiClient.post(
+                '/games',
+                { name, rules: rules || undefined },
+                session.token
+            );
             setResult(data);
-            setActiveGameId(gameId);
         } catch (err) {
             setError(err.message);
         }
@@ -25,25 +27,26 @@ const GameStatePanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--yellow" />
-            <h2 className="panel__title">State game</h2>
-            <p className="panel__hint">
-                GET /api/games/:id/state — current player, top card, hands (yours in full, rivals as
-                counts), and turn history.
-            </p>
+            <div className="panel__edge panel__edge--red" />
+            <h2 className="panel__title">Create game</h2>
+            <p className="panel__hint">POST /api/games — you join automatically as player 1.</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
-                    <span className="panel__label">Game ID</span>
+                    <span className="panel__label">Name</span>
                     <input
                         className="panel__input"
-                        value={gameId}
-                        onChange={(e) => setGameId(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                     />
                 </label>
+                <label className="panel__field">
+                    <span className="panel__label">Rules (optional)</span>
+                    <input className="panel__input" value={rules} onChange={(e) => setRules(e.target.value)} />
+                </label>
                 <button className="panel__button" type="submit">
-                    Get state
+                    Create
                 </button>
             </form>
 
@@ -53,4 +56,4 @@ const GameStatePanel = () => {
     );
 };
 
-export default GameStatePanel;
+export default CreateGamePanel;

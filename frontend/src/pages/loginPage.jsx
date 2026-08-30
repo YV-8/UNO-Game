@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 
-const RegisterPage = ({ onSwitchToLogin }) => {
-    const { register } = useAuth();
+const LoginPage = ({ onSwitchToRegister }) => {
+    const { login } = useAuth();
     const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,7 +13,7 @@ const RegisterPage = ({ onSwitchToLogin }) => {
         setError('');
         setLoading(true);
         try {
-            await register({ username, email, password });
+            await login({ username, password });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -27,7 +26,7 @@ const RegisterPage = ({ onSwitchToLogin }) => {
             <form className="auth-card" onSubmit={handleSubmit}>
                 <div className="auth-card__edge" />
                 <p className="auth-card__eyebrow">Capstone UNO</p>
-                <h1 className="auth-card__title">Create account</h1>
+                <h1 className="auth-card__title">Sign in</h1>
 
                 <label className="auth-card__field">
                     <span className="auth-card__label">Username</span>
@@ -42,25 +41,13 @@ const RegisterPage = ({ onSwitchToLogin }) => {
                 </label>
 
                 <label className="auth-card__field">
-                    <span className="auth-card__label">Email</span>
-                    <input
-                        className="auth-card__input"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        autoComplete="email"
-                        required
-                    />
-                </label>
-
-                <label className="auth-card__field">
                     <span className="auth-card__label">Password</span>
                     <input
                         className="auth-card__input"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        autoComplete="new-password"
+                        autoComplete="current-password"
                         required
                     />
                 </label>
@@ -68,15 +55,15 @@ const RegisterPage = ({ onSwitchToLogin }) => {
                 {error && <p className="auth-card__error">{error}</p>}
 
                 <button className="auth-card__submit" type="submit" disabled={loading}>
-                    {loading ? 'Creating account…' : 'Create account'}
+                    {loading ? 'Signing in…' : 'Sign in'}
                 </button>
 
-                <button type="button" className="auth-card__switch" onClick={onSwitchToLogin}>
-                    Already have an account? Sign in
+                <button type="button" className="auth-card__switch" onClick={onSwitchToRegister}>
+                    New here? Create an account
                 </button>
             </form>
         </div>
     );
 };
 
-export default RegisterPage;
+export default LoginPage;
