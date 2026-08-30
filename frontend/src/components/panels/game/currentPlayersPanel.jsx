@@ -1,21 +1,20 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/authContext.jsx';
-import apiClient from '../../api/client.js';
+import { useAuth } from '../../../context/authContext.jsx';
+import apiClient from '../../../api/client.js';
 
-const UpdateGamePanel = () => {
+const CurrentPlayersPanel = () => {
     const { session } = useAuth();
     const [gameId, setGameId] = useState('');
-    const [name, setName] = useState('');
-    const [result, setResult] = useState(null);
+    const [players, setPlayers] = useState(null);
     const [error, setError] = useState('');
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
-        setResult(null);
+        setPlayers(null);
         try {
-            const data = await apiClient.put(`/games/${gameId}`, { name }, session.token);
-            setResult(data);
+            const data = await apiClient.post('/games/players', { game_id: Number(gameId) }, session.token);
+            setPlayers(data);
         } catch (err) {
             setError(err.message);
         }
@@ -24,8 +23,8 @@ const UpdateGamePanel = () => {
     return (
         <section className="panel">
             <div className="panel__edge panel__edge--blue" />
-            <h2 className="panel__title">Update game</h2>
-            <p className="panel__hint">PUT /api/games/:id</p>
+            <h2 className="panel__title">Current players</h2>
+            <p className="panel__hint">POST /api/games/players — every player currently in this game.</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -37,24 +36,15 @@ const UpdateGamePanel = () => {
                         required
                     />
                 </label>
-                <label className="panel__field">
-                    <span className="panel__label">New name</span>
-                    <input
-                        className="panel__input"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                </label>
                 <button className="panel__button" type="submit">
-                    Update
+                    Load players
                 </button>
             </form>
 
             {error && <p className="panel__error">{error}</p>}
-            {result && <pre className="panel__result">{JSON.stringify(result, null, 2)}</pre>}
+            {players && <pre className="panel__result">{JSON.stringify(players, null, 2)}</pre>}
         </section>
     );
 };
 
-export default UpdateGamePanel;
+export default CurrentPlayersPanel;

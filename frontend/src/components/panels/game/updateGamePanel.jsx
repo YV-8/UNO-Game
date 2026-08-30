@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/authContext.jsx';
-import apiClient from '../../api/client.js';
+import { useAuth } from '../../../context/authContext.jsx';
+import apiClient from '../../../api/client.js';
 
-const CreateGamePanel = () => {
+const UpdateGamePanel = () => {
     const { session } = useAuth();
+    const [gameId, setGameId] = useState('');
     const [name, setName] = useState('');
-    const [rules, setRules] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
@@ -14,11 +14,7 @@ const CreateGamePanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.post(
-                '/games',
-                { name, rules: rules || undefined },
-                session.token
-            );
+            const data = await apiClient.put(`/games/${gameId}`, { name }, session.token);
             setResult(data);
         } catch (err) {
             setError(err.message);
@@ -27,13 +23,22 @@ const CreateGamePanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--red" />
-            <h2 className="panel__title">Create game</h2>
-            <p className="panel__hint">POST /api/games — you join automatically as player 1.</p>
+            <div className="panel__edge panel__edge--blue" />
+            <h2 className="panel__title">Update game</h2>
+            <p className="panel__hint">PUT /api/games/:id</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
-                    <span className="panel__label">Name</span>
+                    <span className="panel__label">Game ID</span>
+                    <input
+                        className="panel__input"
+                        value={gameId}
+                        onChange={(e) => setGameId(e.target.value)}
+                        required
+                    />
+                </label>
+                <label className="panel__field">
+                    <span className="panel__label">New name</span>
                     <input
                         className="panel__input"
                         value={name}
@@ -41,12 +46,8 @@ const CreateGamePanel = () => {
                         required
                     />
                 </label>
-                <label className="panel__field">
-                    <span className="panel__label">Rules (optional)</span>
-                    <input className="panel__input" value={rules} onChange={(e) => setRules(e.target.value)} />
-                </label>
                 <button className="panel__button" type="submit">
-                    Create
+                    Update
                 </button>
             </form>
 
@@ -56,4 +57,4 @@ const CreateGamePanel = () => {
     );
 };
 
-export default CreateGamePanel;
+export default UpdateGamePanel;

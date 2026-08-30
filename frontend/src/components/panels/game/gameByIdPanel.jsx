@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/authContext.jsx';
-import { useGame } from '../../context/gameContext.jsx';
-import apiClient from '../../api/client.js';
+import { useAuth } from '../../../context/authContext.jsx';
+import { useGame } from '../../../context/gameContext.jsx';
+import apiClient from '../../../api/client.js';
 
 const GameByIdPanel = () => {
     const { session } = useAuth();
@@ -47,7 +47,28 @@ const GameByIdPanel = () => {
             </form>
 
             {error && <p className="panel__error">{error}</p>}
-            {result && <pre className="panel__result">{JSON.stringify(result, null, 2)}</pre>}
+            {result && (
+                <div className="game-card game-card--skyblue" style={{ marginTop: 'var(--space-3)' }}>
+                    <h3 className="game-card__title">{result.name || `Game ${result.id || ''}`}</h3>
+                    <table className="game-card__table">
+                        <tbody>
+                            <tr>
+                                <th>Reglas</th>
+                                <td>{result.rules || 'N/A'}</td>
+                            </tr>
+                            {Object.entries(result).map(([key, value]) => {
+                                if (key === 'name' || key === 'rules') return null;
+                                return (
+                                    <tr key={key}>
+                                        <th>{key}</th>
+                                        <td>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </section>
     );
 };

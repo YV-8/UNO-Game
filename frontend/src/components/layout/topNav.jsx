@@ -1,6 +1,16 @@
-const TopNav = ({ items, activeTab, onSelect, onLogout }) => (
+const TopNav = ({ items, activeTab, onSelect, onLogout, onMenu }) => (
     <header className="topnav">
         <span className="topnav__brand">UNO</span>
+        {onMenu && (
+            <button 
+                type="button" 
+                className="topnav__button topnav__button--cream" 
+                onClick={onMenu}
+                style={{ marginRight: 'var(--space-3)' }}
+            >
+                ← Menu
+            </button>
+        )}
         <ul className="topnav__list">
             {items.map((item) => (
                 <li key={item.id}>

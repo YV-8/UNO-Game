@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/authContext.jsx';
-import { useGame } from '../../context/gameContext.jsx';
-import apiClient from '../../api/client.js';
+import { useAuth } from '../../../context/authContext.jsx';
+import apiClient from '../../../api/client.js';
 
-const GameStatePanel = () => {
+const DeleteGamePanel = () => {
     const { session } = useAuth();
-    const { setActiveGameId } = useGame();
     const [gameId, setGameId] = useState('');
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
@@ -15,9 +13,8 @@ const GameStatePanel = () => {
         setError('');
         setResult(null);
         try {
-            const data = await apiClient.get(`/games/${gameId}/state`, session.token);
-            setResult(data);
-            setActiveGameId(gameId);
+            const data = await apiClient.delete(`/games/${gameId}`, session.token);
+            setResult(data ?? { message: 'Deleted.' });
         } catch (err) {
             setError(err.message);
         }
@@ -25,12 +22,9 @@ const GameStatePanel = () => {
 
     return (
         <section className="panel">
-            <div className="panel__edge panel__edge--yellow" />
-            <h2 className="panel__title">State game</h2>
-            <p className="panel__hint">
-                GET /api/games/:id/state — current player, top card, hands (yours in full, rivals as
-                counts), and turn history.
-            </p>
+            <div className="panel__edge panel__edge--red" />
+            <h2 className="panel__title">Delete game</h2>
+            <p className="panel__hint">DELETE /api/games/:id — this cannot be undone.</p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
                 <label className="panel__field">
@@ -42,8 +36,8 @@ const GameStatePanel = () => {
                         required
                     />
                 </label>
-                <button className="panel__button" type="submit">
-                    Get state
+                <button className="panel__button panel__button--danger" type="submit">
+                    Delete
                 </button>
             </form>
 
@@ -53,4 +47,4 @@ const GameStatePanel = () => {
     );
 };
 
-export default GameStatePanel;
+export default DeleteGamePanel;
