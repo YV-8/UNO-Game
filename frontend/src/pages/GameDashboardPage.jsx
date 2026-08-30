@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useAuth } from '../context/authContext.jsx';
-import TopNav from '../components/layout/TopNav.jsx';
-import Sidebar from '../components/layout/Sidebar.jsx';
-import CreateGamePanel from '../components/panels/CreateGamePanel.jsx';
-import GetGamesPanel from '../components/panels/GetGamesPanel.jsx';
-import GameByIdPanel from '../components/panels/GameByIdPanel.jsx';
-import UpdateGamePanel from '../components/panels/UpdateGamePanel.jsx';
-import DeleteGamePanel from '../components/panels/DeleteGamePanel.jsx';
-import GameStatePanel from '../components/panels/GameStatePanel.jsx';
-import PlayerPanel from '../components/panels/PlayerPanel.jsx';
-import CurrentPlayersPanel from '../components/panels/CurrentPlayersPanel.jsx';
+import TopNav from '../components/layout/topNav.jsx';
+import Sidebar from '../components/layout/sidebar.jsx';
+import CreateGamePanel from '../components/panels/game/createGamePanel.jsx';
+import GetGamesPanel from '../components/panels/game/getGamesPanel.jsx';
+import GameByIdPanel from '../components/panels/game/gameByIdPanel.jsx';
+import UpdateGamePanel from '../components/panels/game/updateGamePanel.jsx';
+import DeleteGamePanel from '../components/panels/game/deleteGamePanel.jsx';
+import GameStatePanel from '../components/panels/game/gameStatePanel.jsx';
+import PlayerPanel from '../components/panels/game/playerPanel.jsx';
+import CurrentPlayersPanel from '../components/panels/game/currentPlayersPanel.jsx';
 
 // One entry per top-nav button. `color` cycles through the 4 UNO hues —
 // add new tabs here and both the nav and the panel switch pick them up.
@@ -35,14 +35,14 @@ const PANELS = {
     'current-players': CurrentPlayersPanel,
 };
 
-const DashboardPage = () => {
+const GameDashboardPage = ({ onNavigateToMenu }) => {
     const { logout } = useAuth();
     const [activeTab, setActiveTab] = useState('create-game');
     const ActivePanel = PANELS[activeTab];
 
     return (
         <div className="app-shell">
-            <TopNav items={NAV_ITEMS} activeTab={activeTab} onSelect={setActiveTab} onLogout={logout} />
+            <TopNav items={NAV_ITEMS} activeTab={activeTab} onSelect={setActiveTab} onLogout={logout} onMenu={onNavigateToMenu} />
             <div className="app-shell__body">
                 <main className="app-shell__content">
                     <ActivePanel />
@@ -53,4 +53,4 @@ const DashboardPage = () => {
     );
 };
 
-export default DashboardPage;
+export default GameDashboardPage;
