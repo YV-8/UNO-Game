@@ -87,6 +87,11 @@ export const getGamePlayers = async (req, res) => {
   return handleResult(res, result, 200);
 };
 
+export const getPlayersByGameId = async (req, res) => {
+  const result = await gameService.getGamePlayers(req.params.id);
+  return handleResult(res, result, 200);
+};
+
 export const getCurrentPlayer = async (req, res) => {
   const result = await gameService.getCurrentPlayer(req.body?.game_id);
   return handleResult(res, result, 200);

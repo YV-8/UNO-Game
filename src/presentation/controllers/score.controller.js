@@ -7,7 +7,7 @@ export const getAllScore = async (req, res) => {
 };
 
 export const getScoreById = async (req, res) => {
-    const result = await scoreService.getScoreById(req.params.id);
+    const result = await scoreService.getScores(req.params.id);
     return handleResult(res, result, 200);
 };
 

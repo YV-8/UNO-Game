@@ -8,6 +8,13 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 const PORT = 3000;
 
+import { setupSocketHandler } from './presentation/sockets/gameSocketHandler.js';
+import { socketEmitter } from './utils/socketEmitter.js';
+
+// Setup socket logic
+socketEmitter.setIo(io);
+setupSocketHandler(io);
+
 const startServer = async () => {
   try {
     await dataBase.authenticate();
@@ -18,8 +25,8 @@ const startServer = async () => {
     await dataBase.sync({ alter: true });
     console.log('Database synchronized successfully.');
 
-    // start DB
-    app.listen(PORT, () => {
+    // start DB on http server so websockets work!
+    server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {

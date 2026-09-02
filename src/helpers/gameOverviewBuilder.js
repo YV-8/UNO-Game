@@ -4,9 +4,9 @@ export const gameOverviewBuilder = ({ unoDeck, turnRegistryBuilder }) => {
             activePlayers.map((p) => {
                 const info = handsByPlayerId[p.playerId];
                 if (p.playerId === viewerPlayerId) {
-                    return [p.username, info.cards.map(unoDeck.formatCard)];
+                    return [p.username, info.cards];
                 }
-                return [p.username, { cardCount: info.count }];
+                return [p.username, { cardCount: info.count, sayOne: p.hasSaidUno ?? p.sayOne ?? false }];
             })
         );
 
@@ -16,8 +16,9 @@ export const gameOverviewBuilder = ({ unoDeck, turnRegistryBuilder }) => {
         const historyList = result.registry || result.history || [];
 
         return {
+            state: game.state,
             currentPlayer: currentPlayer?.username ?? null,
-            topCard: topDiscard ? unoDeck.formatCard(topDiscard) : null,
+            topCard: topDiscard ? topDiscard : null,
             hands: buildHands(activePlayers, handsByPlayerId, viewerPlayerId),
             history: historyList,
         };

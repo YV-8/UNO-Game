@@ -17,11 +17,12 @@ router.delete('/:id',gameController.deleteGame);
 router.post('/', gameController.createGame);
 router.put('/:id', gameController.updateGame);
 
-router.post('/state', liveGameCache, gameController.getGameState);
-router.post('/players', liveGameCache, gameController.getGamePlayers);
-router.post('/current-player', liveGameCache, gameController.getCurrentPlayer);
-router.post('/:id/scores', liveGameCache, gameController.getGameScore);
-router.post('/top-card', liveGameCache, gameController.getTopCard);
+router.post('/state', gameController.getGameState);
+router.post('/players', gameController.getGamePlayers);
+router.get('/:id/players', gameController.getPlayersByGameId);
+router.post('/current-player', gameController.getCurrentPlayer);
+router.post('/:id/scores', gameController.getGameScore);
+router.post('/top-card', gameController.getTopCard);
 
 router.post('/join', gameController.join);
 router.post('/leave', gameController.leave);
@@ -30,8 +31,8 @@ router.post('/end', gameController.endGame);
 router.put('/:id/play', gameController.playCard);
 router.get('/:id/hand', gameController.getMyHand);
 router.put('/:id/draw', gameController.drawCard);
-router.get('/:id/state', liveGameCache, gameController.getGameOverview);
-router.get('/:id/history', liveGameCache, gameController.getGameRegistry);
+router.get('/:id/state', gameController.getGameOverview);
+router.get('/:id/history', gameController.getGameRegistry);
 router.put('/:id/say-uno', gameController.sayUno);
 router.put('/:id/challenge-uno', gameController.challengeUno);
 

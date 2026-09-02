@@ -30,6 +30,7 @@ describe('GameService Unit Tests', () => {
 
         gamePlayerRepository = {
             findAllByGameId: jest.fn(),
+            findAllPlayersIncludingLeftByGameId: jest.fn(),
             findByGameAndPlayer: jest.fn(),
             update: jest.fn(),
             create: jest.fn(),
@@ -168,9 +169,9 @@ describe('GameService Unit Tests', () => {
     describe('getGamePlayers', () => {
         test('returns usernames of active players', async () => {
             gameRepository.findById.mockResolvedValue({ id: 1 });
-            gamePlayerRepository.findAllByGameId.mockResolvedValue([{ username: 'ale' }, { username: 'lis' }]);
+            gamePlayerRepository.findAllPlayersIncludingLeftByGameId.mockResolvedValue([{ username: 'ale', hasLeft: false }, { username: 'lis', hasLeft: false }]);
             const result = await gameService.getGamePlayers(1);
-            expect(result.value).toEqual({ game_id: 1, players: ['ale', 'lis'] });
+            expect(result.value).toEqual({ game_id: 1, playerCount: 2, players: [{ username: 'ale', hasLeft: false }, { username: 'lis', hasLeft: false }] });
         });
     });
 
@@ -401,7 +402,7 @@ describe('GameService Unit Tests', () => {
         test('marks sayOne=true and logs the move', async () => {
             gameRules.validateSayUno.mockResolvedValue(Result.Ok({ game: { id: 1 }, gamePlayer: { id: 55, username: 'ale' } }));
             const result = await gameService.sayUno({ gameId: 1, playerId: 1 });
-            expect(gamePlayerRepository.update).toHaveBeenCalledWith(55, { sayOne: true });
+            expect(gamePlayerRepository.update).toHaveBeenCalledWith(55, { hasSaidUno: true });
             expect(result.value).toEqual({ message: 'ale said UNO successfully.' });
         });
     });
@@ -417,7 +418,7 @@ describe('GameService Unit Tests', () => {
             const result = await gameService.challengeUno({ gameId: 1, playerId: 1, challengedUsername: 'lis' });
 
             expect(unoCardBuilder.drawCards).toHaveBeenCalledWith({ gameId: 1, playerId: 2, count: 2 });
-            expect(gamePlayerRepository.update).toHaveBeenCalledWith(9, { sayOne: false });
+            expect(gamePlayerRepository.update).toHaveBeenCalledWith(9, { hasSaidUno: false });
             expect(result.value.message).toContain('Challenge successful');
         });
     });
