@@ -25,7 +25,7 @@ const LoginPage = ({ onSwitchToRegister }) => {
         <div className="auth-screen">
             <form className="auth-card" onSubmit={handleSubmit}>
                 <div className="auth-card__edge" />
-                <p className="auth-card__eyebrow">Capstone UNO</p>
+                <p className="auth-card__eyebrow">UNO</p>
                 <h1 className="auth-card__title">Sign in</h1>
 
                 <label className="auth-card__field">

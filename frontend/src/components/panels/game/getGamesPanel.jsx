@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useAuth } from '../../../context/authContext.jsx';
 import apiClient from '../../../api/client.js';
 
+const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return isoString;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 const GetGamesPanel = () => {
     const { session } = useAuth();
     const [games, setGames] = useState(null);
@@ -46,10 +55,19 @@ const GetGamesPanel = () => {
                                     </tr>
                                     {Object.entries(game).map(([key, value]) => {
                                         if (key === 'name' || key === 'rules') return null;
+                                        
+                                        let displayValue = typeof value === 'object' && value !== null 
+                                            ? JSON.stringify(value) 
+                                            : String(value);
+                                            
+                                        if (key === 'createdAt' || key === 'updatedAt') {
+                                            displayValue = formatDate(value);
+                                        }
+
                                         return (
                                             <tr key={key}>
                                                 <th>{key}</th>
-                                                <td>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</td>
+                                                <td>{displayValue}</td>
                                             </tr>
                                         );
                                     })}

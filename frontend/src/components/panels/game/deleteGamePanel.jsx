@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../../context/authContext.jsx';
 import apiClient from '../../../api/client.js';
+import ResultTable from './ResultTable.jsx';
 
 const DeleteGamePanel = () => {
     const { session } = useAuth();
@@ -41,8 +42,8 @@ const DeleteGamePanel = () => {
                 </button>
             </form>
 
-            {error && <p className="panel__error">{error}</p>}
-            {result && <pre className="panel__result">{JSON.stringify(result, null, 2)}</pre>}
+            {error && <div className="panel__error-box">{error}</div>}
+            {result && <ResultTable result={result} />}
         </section>
     );
 };

@@ -5,9 +5,9 @@ const MenuPage = ({ onNavigate }) => {
 
     return (
         <div className="auth-screen">
-            <div style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 className="auth-card__title" style={{ color: 'var(--color-soft)', margin: 0 }}>
+            <div className="menu-container">
+                <div className="menu-header">
+                    <h1 className="auth-card__title menu-header__title">
                         Main Menu
                     </h1>
                     <button className="topnav__logout" onClick={logout}>
@@ -16,41 +16,29 @@ const MenuPage = ({ onNavigate }) => {
                 </div>
                 
                 <div className="menu-grid">
-                    <button 
-                        className="menu-button menu-button--pink" 
+                    <button
+                        className="menu-button menu-button--pink"
                         onClick={() => onNavigate('game')}
                     >
                         Game
                     </button>
-                    <button 
-                        className="menu-button menu-button--cream" 
+                    <button
+                        className="menu-button menu-button--cream"
                         onClick={() => onNavigate('player')}
                     >
                         Player
                     </button>
-                    <button 
-                        className="menu-button menu-button--lightpurple" 
-                        onClick={() => onNavigate('profile')}
-                    >
-                        Profile
-                    </button>
-                    <button 
-                        className="menu-button menu-button--soft" 
-                        onClick={() => onNavigate('score')}
-                    >
-                        Score
-                    </button>
-                    <button 
-                        className="menu-button menu-button--skyblue" 
-                        onClick={() => onNavigate('card')}
-                    >
-                        Card
-                    </button>
-                    <button 
-                        className="menu-button menu-button--green" 
+                    <button
+                        className="menu-button menu-button--green"
                         onClick={() => onNavigate('lobby')}
                     >
                         Join the Game
+                    </button>
+                    <button
+                        className="menu-button menu-button--lightpurple"
+                        onClick={() => onNavigate('profile')}
+                    >
+                        Profile
                     </button>
                 </div>
             </div>

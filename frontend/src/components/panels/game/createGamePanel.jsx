@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../../../context/authContext.jsx';
+import { useGame } from '../../../context/gameContext.jsx';
 import apiClient from '../../../api/client.js';
+import ResultTable from './ResultTable.jsx';
 
-const CreateGamePanel = () => {
+const CreateGamePanel = ({ onNavigateToLobby }) => {
     const { session } = useAuth();
+    const { setActiveGameId } = useGame();
     const [name, setName] = useState('');
     const [rules, setRules] = useState('');
     const [result, setResult] = useState(null);
@@ -20,6 +23,10 @@ const CreateGamePanel = () => {
                 session.token
             );
             setResult(data);
+            if (data.game_id) {
+                setActiveGameId(data.game_id);
+                if (onNavigateToLobby) onNavigateToLobby();
+            }
         } catch (err) {
             setError(err.message);
         }
@@ -50,8 +57,8 @@ const CreateGamePanel = () => {
                 </button>
             </form>
 
-            {error && <p className="panel__error">{error}</p>}
-            {result && <pre className="panel__result">{JSON.stringify(result, null, 2)}</pre>}
+            {error && <div className="panel__error-box">{error}</div>}
+            {result && <ResultTable result={result} />}
         </section>
     );
 };
