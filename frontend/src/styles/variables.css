@@ -4,34 +4,64 @@
  */
 :root {
     /* Color */
-    --color-soft: #f4f3ef;
-    --color-cream: #fff2bf;
-    --color-mediumSoft:#ece3feaa;
+    /* 1. NEUTROS Y FONDOS */
     --color-dark: #000000;
-    --color-skyblue: #367dc3;
-    --color-mediumSkyblue: #70a7ee;
-    --color-purple: #7216b5;
-    --color-mediumpurple:#580e8d;
-    --color-lightpink: #f895d2;
-    --color-pink: #e671b9c7;
-    --color-darkpink: #4d0130fd;
-    --color-darkred: #690618;
-    --color-lightred: #f0647e;
-    --color-semidarkPurple:#320156af;
-    --color-darkPurple:#1e0034eb;
-    --color-skyPurple: #a964fdc3;
+    --color-soft: #f4f3ef;
+    --color-cream: #f6e5a0;
+    --color-softGlass: rgba(244, 243, 239, 0.4);
+
+    /* 2. GAMA MORADOS / PURPLES */
+    /* Originales */
     --color-lightPurple: #d0a9ffc3;
-    --color-felt: #12372a;
-    --color-felt-soft: #1b4d3a;
-    --color-paper: #f2f5f1;
-    --color-ink: #16211c;
-    --color-red: #e42e2e;
-    --color-yellow: #f2b705;
-    --color-green: #3c9d62;
-    --color-pastelgreen: #a8e6cf;
-    --color-lilac: #e2d1f9;
-    --color-turquoise: #81e6d9;
-    --color-blue: #2e6f95;
+    --color-skyPurple: #a964fdc3;
+    --color-mediumSoft: #ece3feaa;
+    --color-purple: #7216b5;
+    --color-mediumPurple: #580e8d;
+    --color-selfDarkPurple: #370858;
+    --color-semiDarkPurple: #320156af;
+    --color-darkPurple: #170129;
+
+    /* Nuevas Variantes e Intermedios */
+    --color-lavenderSoft: #e8d7ff;
+    --color-purpleGlass: rgba(114, 22, 181, 0.35);
+    --color-deepPurpleGlass: rgba(30, 0, 52, 0.7);
+
+    /* 3. GAMA AZULES / BLUES */
+    /* Originales */
+    --color-lightSkyBlue: #70a7ee;
+    --color-skyBlue: #367dc3;
+    --color-mediumBlue: #245dc2;
+
+    /* Nuevas Variantes */
+    --color-iceBlue: #d6e8ff;
+    --color-skyBlueGlass: rgba(54, 125, 195, 0.4);
+    --color-deepOcean: #1f4f82;
+
+    /* 4. GAMA ROSAS Y ROJOS / PINKS & REDS */
+    /* Originales */
+    --color-lightPink: #f895d2;
+    --color-pink: #e671b9c7;
+    --color-darkPink: #4d0130fd;
+    --color-lightRed: #f0647e;
+    --color-darkRed: #690618;
+
+    /* Nuevas Variantes */
+    --color-blushPink: #ffd3ed;
+    --color-pinkGlass: rgba(230, 113, 185, 0.3);
+    --color-crimsonGlass: rgba(105, 6, 24, 0.5);
+
+    /* 5. EDICIÓN CARTAS UNO (ESTILO PASTEL)*/
+    --color-pastelRed: #ff8b94;
+    --color-pastelBlue: #70a7ee;
+    --color-pastelGreen: #a8e6cf;
+    --color-pastelYellow: #ffd3b6;
+    --color-pastelWild: #d0a9ff;
+
+    /* Versiones Semi-Transparentes para Cartas/Bordes UNO */
+    --color-pastelRedGlass: rgba(255, 139, 148, 0.4);
+    --color-pastelBlueGlass: rgba(112, 167, 238, 0.4);
+    --color-pastelGreenGlass: rgba(168, 230, 207, 0.4);
+    --color-pastelYellowGlass: rgba(255, 211, 182, 0.4);
 
     /* Type */
     --font-display: 'Baloo 2', system-ui, sans-serif;

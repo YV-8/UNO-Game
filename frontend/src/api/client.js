@@ -18,7 +18,7 @@ const request = async (path, { method = 'GET', body, token } = {}) => {
     const data = contentType.includes('application/json') ? await res.json() : null;
 
     if (!res.ok) {
-        const message = data?.message || `Request failed with status ${res.status}`;
+        const message = data?.error || data?.message || `Request failed with status ${res.status}`;
         throw new Error(message);
     }
     return data;

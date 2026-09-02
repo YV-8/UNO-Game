@@ -1,0 +1,452 @@
+/* Game Board Root */
+.game-board {
+    background-color: var(--color-darkPurple);
+    background: radial-gradient(ellipse at center, #2e0747 0%, #170128 55%, #090012 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-3);
+    color: var(--color-soft);
+    font-family: var(--font-body);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.6s ease, background-color 0.6s ease;
+}
+
+/* Dynamic background shift based on active top card color */
+.game-board[data-color="red"] {
+    background: radial-gradient(ellipse at center, #5c0717 0%, #290209 55%, #0d0004 100%);
+}
+
+.game-board[data-color="blue"] {
+    background: radial-gradient(ellipse at center, #0f3460 0%, #071a33 55%, #020914 100%);
+}
+
+.game-board[data-color="green"] {
+    background: radial-gradient(ellipse at center, #124d2d 0%, #082616 55%, #020f08 100%);
+}
+
+.game-board[data-color="yellow"] {
+    background: radial-gradient(ellipse at center, #57450a 0%, #2b2204 55%, #0e0a01 100%);
+}
+
+/* Header */
+.game-board__header {
+    color: var(--color-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0 var(--space-3);
+}
+
+.game-board__turn-status {
+    color: var(--color-pastelYellow);
+    font-weight: bold;
+    font-size: 1.25rem;
+    font-family: var(--font-display);
+}
+
+.game-board__leave-btn {
+    background: var(--color-lightPurple);
+    color: var(--color-soft);
+    border: none;
+    padding: 0.5rem var(--space-3);
+    border-radius: var(--radius-input);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.game-board__leave-btn:hover {
+    background: var(--color-darkRed);
+}
+
+/* Opponent Area */
+.game-board__opponents {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+}
+
+.opponent-badge {
+    background: var(--color-deepPurpleGlass);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-input);
+    text-align: center;
+    border: 1px solid var(--color-purpleGlass);
+}
+
+.opponent-badge__name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: var(--space-1);
+}
+
+.opponent-badge__cards {
+    font-size: 0.9rem;
+    color: var(--color-lavenderSoft);
+}
+
+.opponent-badge__challenge-btn {
+    margin-top: 0.5rem;
+    background: var(--color-lightRed);
+    color: var(--color-soft);
+    border: 1px solid var(--color-darkRed);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    transition: transform 0.1s ease, background 0.2s ease;
+}
+
+.opponent-badge__challenge-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: var(--color-darkRed);
+}
+
+.opponent-badge__challenge-btn:disabled {
+    background: var(--color-mediumPurple);
+    color: var(--color-mediumSoft);
+    border: 1px solid var(--color-darkPurple);
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
+}
+
+.opponent-badge__say-one {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--color-pastelYellow);
+    font-weight: bold;
+}
+
+/* Play Area */
+.game-board__play-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    flex: 1;
+}
+
+.game-board__color-badge {
+    color: var(--color-soft);
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: var(--color-deepPurpleGlass);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease;
+}
+
+/* Manejo de bordes de color dinámicos con data-color */
+.game-board__color-badge[data-color="red"] {
+    border-color: var(--color-pastelRed);
+}
+
+.game-board__color-badge[data-color="blue"] {
+    border-color: var(--color-pastelBlue);
+}
+
+.game-board__color-badge[data-color="green"] {
+    border-color: var(--color-pastelGreen);
+}
+
+.game-board__color-badge[data-color="yellow"] {
+    border-color: var(--color-pastelYellow);
+}
+
+.game-board__cards-wrapper {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.game-board__top-card-wrapper {
+    border-radius: 10px;
+    transition: box-shadow 0.5s ease;
+}
+
+/* Manejo del resplandor de la carta activa con data-color */
+.game-board__top-card-wrapper[data-color="red"] {
+    box-shadow: 0 0 30px 10px var(--color-pastelRedGlass);
+}
+
+.game-board__top-card-wrapper[data-color="blue"] {
+    box-shadow: 0 0 30px 10px var(--color-pastelBlueGlass);
+}
+
+.game-board__top-card-wrapper[data-color="green"] {
+    box-shadow: 0 0 30px 10px var(--color-pastelGreenGlass);
+}
+
+.game-board__top-card-wrapper[data-color="yellow"] {
+    box-shadow: 0 0 30px 10px var(--color-pastelYellowGlass);
+}
+
+/* Player Area */
+.game-board__player-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: var(--space-4);
+}
+
+.game-board__turn-message {
+    background: var(--color-crimsonGlass);
+    color: var(--color-soft);
+    padding: 0.5rem var(--space-3);
+    border-radius: var(--radius-input);
+    font-weight: bold;
+    margin-bottom: var(--space-3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.2s ease-in-out;
+    border: 1px solid var(--color-lightRed);
+}
+
+.uno-btn {
+    background: var(--color-lightPurple);
+    color: var(--color-soft);
+    font-weight: 900;
+    font-size: 1.5rem;
+    padding: 0.5rem 2rem;
+    border: 3px var(--color-darkPurple);
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease;
+}
+
+.uno-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.uno-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.uno-btn:active {
+    transform: scale(0.95);
+}
+
+.player-hand {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    max-width: 90vw;
+}
+
+/* UNO Card Styles */
+.uno-card {
+    width: 90px;
+    height: 136px;
+    border-radius: var(--radius-card);
+    border: 2px solid var(--color-soft);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-darkPurple);
+}
+
+.uno-card--hidden {
+    background: var(--color-lightRed);
+    background-image: repeating-linear-gradient(45deg, var(--color-darkRed) 25%, transparent 25%, transparent 75%, var(--color-darkRed) 75%, var(--color-darkRed));
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+}
+
+.uno-card__back {
+    color: var(--color-pastelYellow);
+    font-weight: 900;
+    font-size: 1.5rem;
+    transform: rotate(-15deg);
+    text-shadow: 2px 2px 0px var(--color-dark);
+}
+
+.uno-card--playable:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-card);
+    z-index: 10;
+}
+
+.uno-card__fallback-label {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.7) !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Modales Base */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-deepPurpleGlass);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: var(--space-3);
+}
+
+/* Modal Resultado */
+.result-modal {
+    background: radial-gradient(ellipse at center, var(--color-selfDarkPurple) 0%, var(--color-darkPurple) 55%, var(--color-dark) 100%);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    border: 2px solid var(--color-purple);
+    max-width: 500px;
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-modal__title {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-3);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.result-modal__title--win {
+    color: var(--color-soft);
+}
+
+.result-modal__title--lose {
+    color: var(--color-lavenderSoft);
+}
+
+.result-modal__message {
+    color: var(--color-soft);
+    margin-bottom: var(--space-5);
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.result-modal__btn {
+    padding: 1rem var(--space-4);
+    font-size: 1rem;
+    background: var(--color-lavenderSoft);
+    border: none;
+    color: var(--color-selfDarkPurple);
+    font-weight: bold;
+    border-radius: var(--radius-input);
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--color-purpleGlass);
+    text-transform: uppercase;
+}
+
+/* Modal Selector de Color */
+.color-picker-modal {
+    background: var(--color-darkPurple);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-mediumPurple);
+}
+
+.color-picker-modal__title {
+    color: var(--color-soft);
+    margin-bottom: var(--space-4);
+    font-weight: bold;
+    font-family: var(--font-display);
+}
+
+.color-picker-modal__grid {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.color-picker-modal__btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 4px solid var(--color-soft);
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease;
+}
+
+.color-picker-modal__btn:hover {
+    transform: scale(1.1);
+}
+
+.color-picker-modal__btn--red {
+    background: var(--color-pastelRed);
+}
+
+.color-picker-modal__btn--blue {
+    background: var(--color-pastelBlue);
+}
+
+.color-picker-modal__btn--green {
+    background: var(--color-pastelGreen);
+}
+
+.color-picker-modal__btn--yellow {
+    background: var(--color-pastelYellow);
+}
+
+.color-picker-modal__cancel-btn {
+    margin-top: var(--space-4);
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    background: var(--color-mediumPurple);
+    border: none;
+    color: var(--color-soft);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

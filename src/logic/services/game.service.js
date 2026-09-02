@@ -1,3 +1,4 @@
+import { socketEmitter } from '../../utils/socketEmitter.js';
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
 export const gameService = ({ gameRepository, cardRepository, registryRepository, gameRules, gamePlayerRepository, scoreRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, gameOverviewBuilder, turnResolver, turnRegistryBuilder, respond }) => {
     const getAllGame = async () => {
@@ -73,8 +74,12 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         if (!numGameId) return respond.Err({ statusCode: 400, message: 'ID is required' });
         const game = await gameRepository.findById(numGameId);
         if (!game) return respond.Err({ statusCode: 404, message: 'Game not found' });
-        const gamePlayers = await gamePlayerRepository.findAllByGameId(numGameId);
-        return respond.Ok({ game_id: game.id, players: gamePlayers.map((gp) => gp.username) });
+        const gamePlayers = await gamePlayerRepository.findAllPlayersIncludingLeftByGameId(numGameId);
+        return respond.Ok({ 
+            game_id: game.id, 
+            playerCount: gamePlayers.length,
+            players: gamePlayers.map((gp) => ({ username: gp.username, hasLeft: gp.hasLeft })) 
+        });
     };
 
     const getCurrentPlayer = async (id) => {
@@ -150,6 +155,10 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         if (validation.isErr()) return validation;
 
         const { game, existingPlayer } = validation.value;
+
+        if (existingPlayer && !existingPlayer.hasLeft) {
+            return validation.map(() => ({ message: 'User is already in the game' }));
+        }
 
         if (existingPlayer && existingPlayer.hasLeft) {
             await gamePlayerRepository.update(existingPlayer.id, { hasLeft: false });
@@ -239,6 +248,9 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
             move: 'play_card',
             details: { card: unoDeck.formatCard(targetCard), chosenColor: validColor },
         });
+
+        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
+
         return respond.Ok({
             message: remainingCards === 0
                 ? `You played your last card! You win! You earned ${pointsEarned} points`
@@ -274,8 +286,11 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
             gameId: game.id,
             playerId,
             move: 'draw_card',
-            details: { card: unoDeck.formatCard(drawCard) },
+            details: { card: unoDeck.formatCard(drawnCard) },
         });
+
+        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
+
         return respond.Ok({
             message: `${activePlayers[currentIndex].username} drew a card from the deck.`,
             cardDrawn: unoDeck.formatCard(drawnCard),
@@ -353,9 +368,11 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         if (validation.isErr()) return validation;
 
         const { game, gamePlayer } = validation.value;
-        await gamePlayerRepository.update(gamePlayer.id, { sayOne: true });
+        await gamePlayerRepository.update(gamePlayer.id, { hasSaidUno: true });
 
         await registryRepository.create({ gameId: game.id, playerId, move: 'say_uno' });
+
+        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({ message: `${gamePlayer.username} said UNO successfully.` });
     };
@@ -367,7 +384,7 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         const { game, challengedPlayer } = validation.value;
 
         await unoCardBuilder.drawCards({ gameId: game.id, playerId: challengedPlayer.playerId, count: 2 });
-        await gamePlayerRepository.update(challengedPlayer.id, { sayOne: false });
+        await gamePlayerRepository.update(challengedPlayer.id, { hasSaidUno: false });
 
         await registryRepository.create({
             gameId: game.id,
@@ -377,6 +394,8 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         });
 
         const currentPlayerRow = await gamePlayerRepository.findByGameAndPlayer(game.id, game.currentPlayerId);
+
+        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({
             message: `Challenge successful. ${challengedPlayer.username} forgot to say UNO and draws 2 cards.`,

@@ -31,7 +31,7 @@ export const authService = ({
         if (validation.isErr()) return validation;
 
         const { player } = validation.value;
-        return respond.Ok({ username: player.username, email: player.email });
+        return respond.Ok({ id: player.id, username: player.username, email: player.email });
     };
 
     const logout = async (token) => {

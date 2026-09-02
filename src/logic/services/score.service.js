@@ -8,7 +8,7 @@ export const scoreService = ({ scoreRepository, scoreRules, validationresponde, 
     const getScoreById = async (id) => {
         const validation = await scoreRules.validateGetScore({ id });
         if (validation.isErr()) return validation;
-        return respond.Ok(result.value.existingScore);
+        return respond.Ok(validation.value.existingScore);
     };
 
     const createScore = async ({ playerId, gameId, score }) => {
@@ -39,7 +39,7 @@ export const scoreService = ({ scoreRepository, scoreRules, validationresponde, 
         if (validation.isErr()) return validation;
 
         const deleted = await scoreRepository.delete(id);
-        if (!deleted) return responde.Err({ statusCode: 404, message: 'Score not found' });
+        if (!deleted) return respond.Err({ statusCode: 404, message: 'Score not found' });
         return respond.Ok({});
     };
     const getScores = async (id) => {

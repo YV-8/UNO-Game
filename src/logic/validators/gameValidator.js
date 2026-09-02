@@ -73,7 +73,8 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
         const existingPlayer = await gamePlayerRepository.findByGameAndPlayer(data.gameId, data.playerId);
 
         if (existingPlayer && !existingPlayer.hasLeft) {
-            return Respond.Err({ statusCode: 400, message: 'User stays in this game' });
+            // User is already in the game, allow them to enter
+            return Respond.Ok({ ...data, existingPlayer });
         }
         if (!existingPlayer && data.game.state !== 'waiting') {
             return Respond.Err({ statusCode: 400, message: 'The game started, only players who already joined can rejoin' });
@@ -214,7 +215,7 @@ export const gameValidator = ({ gameRepository, gamePlayerRepository, cardReposi
     validateChallengeIsValid: async (data) => {
         const { game, challengedPlayer } = data;
         const handCount = await cardRepository.countByGameAndPlayer(game.id, challengedPlayer.playerId, 'hand');
-        const forgotToSayUno = handCount === 1 && !challengedPlayer.sayOne;
+        const forgotToSayUno = handCount === 1 && !challengedPlayer.hasSaidUno && !challengedPlayer.sayOne;
 
         if (!forgotToSayUno) {
             return Respond.Err({

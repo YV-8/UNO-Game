@@ -8,6 +8,13 @@ class GamePlayerRepository {
         });
     }
 
+    async findAllPlayersIncludingLeftByGameId(gameId) {
+        return await GamePlayer.findAll({
+            where: { gameId },
+            order: [['turnOrder', 'ASC']],
+        });
+    }
+
     async findByGameAndPlayer(gameId, playerId) {
         return await GamePlayer.findOne({ where: { gameId, playerId } });
     }

@@ -6,7 +6,7 @@ class GameRepository {
   }
 
   async findById(id) {
-    return await Game.findByPk(id);
+    return await Game.findByPk(id, { include: ['creator'] });
   }
 
   async findByName(name) {
