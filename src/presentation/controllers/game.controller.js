@@ -92,10 +92,12 @@ export const getCurrentPlayer = async (req, res) => {
   return handleResult(res, result, 200);
 };
 
-export const getGameScores = async (req, res) => {
-  const result = await gameService.getGameScores(Number(req.body?.game_id));
+export const getGameScore = async (req, res, next) => {
+  const result = await gameService.getScores({
+    gameId: req.params.id, playerId: req.player.id
+  });
   return handleResult(res, result, 200);
-};
+}
 
 export const playCard = async (req, res) => {
   const result = await gameService.playCard({
@@ -173,10 +175,3 @@ export const challengeUno = async (req, res) => {
     });
   return handleResult(res, result, 200);
 };
-
-export const getGameScore = async (req, res, next) => {
-  const result = await gameService.getScores({
-    gameId: req.params.id, playerId: req.player.id
-  });
-  return handleResult(res, result, 200);
-}

@@ -7,17 +7,19 @@ import gamePlayerRepository from './dataAccess/repositories/gamePlayer.repositor
 import cardRepository from './dataAccess/repositories/card.repository.js';
 import scoreRepository from './dataAccess/repositories/score.repository.js';
 import registryRepository from './dataAccess/repositories/registry.repository.js';
+import apiUsageRepository from './dataAccess/repositories/apiUsage.repository.js';
 
+import respond from './logic/monads/respond.js';
 import { addToBlacklist } from './middlewares/tokenBlacklist.js';
 import { unoDeck as createUnoDeck } from './helpers/unoDeck.js';
 import { unoGameRules as createUnoGameRules } from './helpers/unoGameRules.js';
 import { unoCardBuilder as createUnoCardBuilder, unoCardBuilder } from './helpers/unoCardBuilder.js';
-import respond from './logic/monads/respond.js';
 import { parseCardString } from './helpers/parseCardsString.js';
 import { gameOverviewBuilder as turnOverviewFactory} from './helpers/gameOverviewBuilder.js';
 import { turnRegistryBuilder as turnRegistryFactory} from './helpers/turnRegistryBuilder.js';
 import { getCardEffect } from './helpers/cardEffects.js';
 import { turnResolver } from './helpers/turnResolver.js';
+import { trackingMiddleware } from './middlewares/withTracking.middleware.js';
 
 import { authValidator } from './logic/validators/authValidator.js';
 import { playerValidator } from './logic/validators/playerValidator.js';
@@ -36,6 +38,7 @@ import { playerService as createPlayerService } from './logic/services/player.se
 import { gameService as createGameService } from './logic/services/game.service.js';
 import { cardService as createCardService } from './logic/services/card.service.js';
 import { scoreService as createScoreService } from './logic/services/score.service.js';
+import { statsService as createStatsService} from './logic/services/stas.service.js'
 import { Registry } from './dataAccess/models/index.js';
 
 const hashProvider = {
@@ -144,5 +147,15 @@ const builtScoreRules = scoreRules(builtScoreValidator);
 export const scoreService = createScoreService({
     scoreRepository,
     scoreRules: builtScoreRules,
+    respond,
+});
+
+//Stats
+export const withTracking = trackingMiddleware({
+    apiUsageRepository,
+});
+
+export const statsService = createStatsService({
+    apiUsageRepository,
     respond,
 });

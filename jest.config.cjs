@@ -19,6 +19,7 @@ module.exports = {
         'src/logic/monads/**/*.js',
         'src/helpers/**/*s',
         'src/presentation/controllers/**/*.js',
+        'src/presentation/socket/connectionRegistry.js',
         '!src/dataAccess/models/**',
         '!src/dataAccess/database.js'
     ],
