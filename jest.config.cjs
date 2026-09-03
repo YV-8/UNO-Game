@@ -16,6 +16,8 @@ module.exports = {
     coverageDirectory: 'coverage',
     collectCoverageFrom: [
         'src/logic/services/**/*.js',
+        'src/logic/monads/**/*.js',
+        'src/helpers/**/*.js',
         'src/presentation/controllers/**/*.js',
         'src/dataAccess/repositories/**/*.js',
         '!src/dataAccess/models/**',
