@@ -23,7 +23,7 @@
   },
   "homepage": "https://gitlab.com/jala-university1/cohort-5/ES.CSPR-244.GA.T2.26.M1/SC/laboratorios-p4/adriana-monica-escobar-plaza/capstone-uno#readme",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",

@@ -1,19 +1,22 @@
 import { composeAsyncValidators } from '../../helpers/composeAsyncValidators.js';
-import * as authValidator from './authValidator.js';
 
-export const validateRegister = composeAsyncValidators(
-    authValidator.validateRegisterFieldsProvided,
-    authValidator.validateUsernameNotTaken,
-    authValidator.validateEmailFormat,
-    authValidator.validateEmailNotTaken
-);
+export const authRules = (authValidator) => ({
 
-export const validateLogin = composeAsyncValidators(
-    authValidator.validateLoginFieldsProvided,
-    authValidator.validateUserExists,
-    authValidator.validatePasswordMatches
-);
+    validateRegister: composeAsyncValidators(
+        authValidator.validateRegisterFieldsProvided,
+        authValidator.validateUsernameNotTaken,
+        authValidator.validateEmailFormat,
+        authValidator.validateEmailNotTaken
+    ),
 
-export const validateGetProfile = composeAsyncValidators(
-    authValidator.validatePlayerExistsById
-);
+    validateLogin: composeAsyncValidators(
+        authValidator.validateLoginFieldsProvided,
+        authValidator.validateUserExists,
+        authValidator.validatePasswordMatches
+    ),
+
+    validateGetProfile: composeAsyncValidators(
+        authValidator.validatePlayerExistsById
+    ),
+
+});

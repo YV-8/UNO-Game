@@ -1,46 +1,43 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import Result from '../monads/result.js';
-import { addToBlacklist } from '../../middlewares/tokenBlacklist.js';
-import * as authRules from '../validators/authRules.js';
+export const authService = ({
+    playerRepository, authRules, hashProvider, tokenProvider, blacklist, config, respond,
+}) => {
 
-const SALT_ROUNDS = 10;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '3h';
+    const register = async ({ username, email, password }) => {
+        const validation = await authRules.validateRegister({ username, email, password });
+        if (validation.isErr()) return validation;
 
-export const register = async ({ username, email, password }) => {
-    const result = await authRules.validateRegister({ username, email, password });
-    if (result.isErr()) return result;
+        const hashedPassword = await hashProvider.hash(password, config.saltRounds);
+        await playerRepository.create({ username, email, password: hashedPassword });
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const player = await PlayerRepository.create({ username, email, password: hashedPassword });
+        return respond.Ok({ message: 'User registered successfully' });
+    };
 
-    return Result.Ok({message: 'User registered successfully'});
-};
+    const login = async ({ username, password }) => {
+        const validation = await authRules.validateLogin({ username, password });
+        if (validation.isErr()) return validation;
 
-export const login = async ({ username, password }) => {
-    const result = await authRules.validateLogin({ username, password });
-    if (result.isErr()) return result;
+        const { player } = validation.value;
+        const token = tokenProvider.sign(
+            { id: player.id, username: player.username },
+            config.jwtSecret,
+            { expiresIn: config.jwtExpiresIn }
+        );
 
-    const { player } = result.value;
-    const token = jwt.sign(
-        { id: player.id, username: player.username },
-        process.env.JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-    );
+        return respond.Ok({ access_token: token });
+    };
 
-    return Result.Ok({ access_token: token });
-};
+    const getProfile = async (playerId) => {
+        const validation = await authRules.validateGetProfile({ playerId });
+        if (validation.isErr()) return validation;
 
-export const getProfile = async (playerId) => {
-    const result = await authRules.validateGetProfile({ playerId });
-    if (result.isErr()) return result;
+        const { player } = validation.value;
+        return respond.Ok({ username: player.username, email: player.email });
+    };
 
-    const { player } = result.value;
-    return Result.Ok({ username: player.username, email: player.email });
-};
+    const logout = async (token) => {
+        blacklist.add(token);
+        return respond.Ok({ message: 'User logged out successfully' });
+    };
 
-export const logout = async (token) => {
-    addToBlacklist(token);
-    return Result.Ok({ message: 'User logged out successfully' });
+    return { register, login, getProfile, logout };
 };

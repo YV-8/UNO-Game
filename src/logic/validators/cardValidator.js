@@ -1,60 +1,59 @@
-import Result from '../monads/result.js';
-import CardRepository from '../../dataAccess/repositories/cards.repository.js';
-import GameRepository from '../../dataAccess/repositories/game.repository.js';
+import Respond from '../monads/respond.js';
 
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
+export const cardValidator = ({ cardRepository, gameRepository, gamePlayerRepository }) => ({
+    validateIdProvided: async (data) => {
+        if (!data.id) {
+            return Respond.Err({ statusCode: 400, message: 'ID is required' });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validateIdProvided = async (data) => {
-    if (!data.id) {
-        return Result.Err({ statusCode: 400, message: 'ID is required' });
-    }
-    return Result.Ok(data);
-};
+    validateCardExists: async (data) => {
+        const card = await cardRepository.findById(data.id);
+        if (!card) {
+            return Respond.Err({ statusCode: 404, message: 'Card not found' });
+        }
+        return Respond.Ok({ ...data, card });
+    },
 
-export const validateCardExists = async (data) => {
-    const card = await CardRepository.findById(data.id);
-    if (!card) {
-        return Result.Err({ statusCode: 404, message: 'Card not found' });
-    }
-    return Result.Ok({ ...data, card });
-};
+    validateCreateFieldsProvided: async (data) => {
+        const { color, value, gameId } = data;
+        if (!color || value === undefined || !gameId) {
+            return Respond.Err({ statusCode: 400, message: 'color, value and gameId are required' });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validateCreateFieldsProvided = async (data) => {
-    const { color, value, gameId } = data;
-    if (!color || value === undefined || !gameId) {
-        return Result.Err({ statusCode: 400, message: 'color, value and gameId are required' });
-    }
-    return Result.Ok(data);
-};
+    validateColorValid: async (data) => {
+        if (data.color !== undefined && !VALID_COLORS.includes(data.color)) {
+            return Respond.Err({ statusCode: 400, message: `color must be one of: ${VALID_COLORS.join(', ')}` });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validateColorValid = async (data) => {
-    if (data.color !== undefined && !VALID_COLORS.includes(data.color)) {
-        return Result.Err({ statusCode: 400, message: `color must be one of: ${VALID_COLORS.join(', ')}` });
-    }
-    return Result.Ok(data);
-};
+    validateGameExistsForCard: async (data) => {
+        const game = await gameRepository.findById(data.gameId);
+        if (!game) {
+            return Respond.Err({ statusCode: 404, message: 'Referenced game does not exist' });
+        }
+        return Respond.Ok({ ...data, game });
+    },
 
-export const validateGameExistsForCard = async (data) => {
-    const game = await GameRepository.findById(data.gameId);
-    if (!game) {
-        return Result.Err({ statusCode: 404, message: 'Referenced game does not exist' });
-    }
-    return Result.Ok({ ...data, game });
-};
+    validateGameExistsIfGameIdProvided: async (data) => {
+        if (data.gameId === undefined) return Respond.Ok(data);
+        const game = await gameRepository.findById(data.gameId);
+        if (!game) {
+            return Respond.Err({ statusCode: 404, message: 'Referenced game does not exist' });
+        }
+        return Respond.Ok({ ...data, game });
+    },
 
-export const validateGameExistsIfGameIdProvided = async (data) => {
-    if (data.gameId === undefined) return Result.Ok(data);
-    const game = await GameRepository.findById(data.gameId);
-    if (!game) {
-        return Result.Err({ statusCode: 404, message: 'Referenced game does not exist' });
-    }
-    return Result.Ok({ ...data, game });
-};
-
-export const validateGameExistsForTopCard = async (data) => {
-    const game = await GameRepository.findById(data.id);
-    if (!game) {
-        return Result.Err({ statusCode: 404, message: 'Game not found' });
-    }
-    return Result.Ok({ ...data, game });
-};
+    validateGameExistsForTopCard: async (data) => {
+        const game = await gameRepository.findById(data.id);
+        if (!game) {
+            return Respond.Err({ statusCode: 404, message: 'Game not found' });
+        }
+        return Respond.Ok({ ...data, game });
+    },
+});

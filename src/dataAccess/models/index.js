@@ -1,10 +1,11 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes,Op } from 'sequelize';
 import sequelize from '../database.js';
 import playerModel from './player.js';
 import gameModel from './game.js';
 import gamePlayerModel from './gameplayer.js';
-import cardModel from './cards.js';
+import cardModel from './card.js';
 import scoreModel from './score.js';
+import registry from './registry.js';
 
 const createModels = (sequelize) => {
     const models = {};
@@ -14,6 +15,7 @@ const createModels = (sequelize) => {
     models.GamePlayer = gamePlayerModel(sequelize, DataTypes);
     models.Card = cardModel(sequelize, DataTypes);
     models.Score = scoreModel(sequelize, DataTypes);
+    models.Registry = registry(sequelize, DataTypes);
 
     models.sequelize = sequelize;
 
@@ -26,6 +28,6 @@ const createModels = (sequelize) => {
     return models;
 };
 const models = createModels(sequelize);
-export const { Player, Game, Card, Score, GamePlayer } = models;
+export const { Player, Game, Card, Score, GamePlayer, Registry } = models;
 
 export default models;

@@ -1,36 +1,87 @@
 import { composeAsyncValidators } from '../../helpers/composeAsyncValidators.js';
-import * as gameValidator from './gameValidator.js';
 
-export const validateCreateGame = composeAsyncValidators(
-    gameValidator.validateNameProvided,
-    gameValidator.validateNameNotTaken
-);
+export const gameRules = (gameValidator) => ({
+    validateCreateGame: composeAsyncValidators(
+        gameValidator.validateNameProvided,
+        gameValidator.validateNameNotTaken
+    ),
 
-export const validateUpdateGame = composeAsyncValidators(
-    gameValidator.validateGameExists,
-    gameValidator.validateStatusValue
-);
+    validateUpdateGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateStatusValue
+    ),
 
-export const validateStartGame = composeAsyncValidators(
-    gameValidator.validateGameExists,
-    gameValidator.validateIsCreator,
-    gameValidator.validateGameStateIs('waiting', 'This game cannot be started from its current state'),
-    gameValidator.validateMinPlayers
-);
+    validateStartGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateIsCreator,
+        gameValidator.validateGameStateIs('waiting', 'This game cannot be started from its current state'),
+        gameValidator.validateMinPlayers,
+        gameValidator.validateCardsNotCreated
+    ),
 
-export const validateEndGame = composeAsyncValidators(
-    gameValidator.validateGameExists,
-    gameValidator.validateIsCreator,
-    gameValidator.validateGameStateIs('in_progress', 'This game is not in progress')
-);
+    validateEndGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateIsCreator,
+        gameValidator.validateGameStateIs('in_progress', 'This game is not in progress')
+    ),
 
-export const validateJoinGame = composeAsyncValidators(
-    gameValidator.validateGameExists,
-    gameValidator.validateGameNotFinished,
-    gameValidator.validateJoinEligibility
-);
+    validateJoinGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateJoinEligibility
+    ),
 
-export const validateLeaveGame = composeAsyncValidators(
-    gameValidator.validateGameExists,
-    gameValidator.validateActivePlayer
-);
+    validateLeaveGame: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validateGetTopCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateTopCardExists
+    ),
+        validateGetGameScores: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validatePlayCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
+        gameValidator.validateTurnOrder,
+        gameValidator.validateCardInHand,
+        gameValidator.validateChosenColorForWild,
+        gameValidator.validateCardCompatible
+    ),
+    validateGetPlayerHand: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validateDrawCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
+        gameValidator.validateTurnOrder,
+        gameValidator.validateNoPlayableCard
+    ),
+    validateGetGameOverview: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateActivePlayer
+    ),
+    validateSayUno: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateBodyPlayerMatchesToken,
+        gameValidator.validateCanSayUno
+    ),
+    validateChallengeUno: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer,
+        gameValidator.validateChallengedPlayerExists,
+        gameValidator.validateNotSelfChallenge,
+        gameValidator.validateChallengeIsValid
+    ),
+});

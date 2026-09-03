@@ -1,4 +1,4 @@
-import {Score} from '../models/index.js';
+import { Score } from '../models/index.js';
 
 class ScoreRepository {
     async findAll() {
@@ -24,6 +24,13 @@ class ScoreRepository {
         if (!score) return false;
         await score.destroy();
         return true;
+    }
+    async findAllByGameId(gameId) {
+        return await Score.findAll({ where: { gameId } });
+    }
+
+    async findByGameAndPlayer(gameId, playerId) {
+        return await Score.findOne({ where: { gameId, playerId } });
     }
 }
 

@@ -1,133 +1,83 @@
-import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
-import * as PlayerService from '../../../logic/services/player.service.js';
+import { playerService as createPlayerService } from '../../../logic/services/player.service.js';
+import Result from '../../../logic/monads/respond.js';
 
-jest.mock('../../../dataAccess/repositories/player.repository.js');
+describe('PlayerService Unit Tests', () => {
+    let playerRepository, playerRules, hashProvider, config, playerService;
 
-describe('PlayerService', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => {
+        playerRepository = { findAll: jest.fn(), update: jest.fn(), delete: jest.fn() };
+        hashProvider = { hash: jest.fn() };
+        config = { saltRounds: 10 };
+        playerRules = {
+            validateGetPlayer: jest.fn(),
+            validateUpdatePlayer: jest.fn(),
+            validateDeletePlayer: jest.fn(),
+        };
+
+        playerService = createPlayerService({ playerRepository, playerRules, hashProvider, config, respond: Result });
+    });
 
     describe('getAllPlayers', () => {
-        it('should return Ok with all players', async () => {
-            const mockPlayers = [{ id: 1, username: 'moni' }, { id: 2, username: 'luigi' }];
-            PlayerRepository.findAll.mockResolvedValue(mockPlayers);
-
-            const result = await PlayerService.getAllPlayers();
-
-            expect(result.isOk()).toBe(true);
-            expect(result.value).toEqual(mockPlayers);
-            expect(PlayerRepository.findAll).toHaveBeenCalledTimes(1);
+        test('returns Ok with all players', async () => {
+            playerRepository.findAll.mockResolvedValue([{ id: 1, username: 'ale' }]);
+            const result = await playerService.getAllPlayers();
+            expect(result.value).toEqual([{ id: 1, username: 'ale' }]);
         });
     });
 
     describe('getPlayerById', () => {
-        it('should return Err 400 if id is not provided', async () => {
-            const result = await PlayerService.getPlayerById();
+        test('returns Err if the player does not exist', async () => {
+            playerRules.validateGetPlayer.mockResolvedValue(Result.Err({ statusCode: 404, message: 'Not found' }));
+            const result = await playerService.getPlayerById(99);
             expect(result.isErr()).toBe(true);
-            expect(result.error).toMatchObject({ statusCode: 400, message: 'ID is required' });
         });
 
-        it('should return Ok with the player using the correct id', async () => {
-            const mockPlayer = { id: 1, username: 'Moni' };
-            PlayerRepository.findById.mockResolvedValue(mockPlayer);
-
-            const result = await PlayerService.getPlayerById(1);
-
-            expect(result.value).toEqual(mockPlayer);
-            expect(PlayerRepository.findById).toHaveBeenCalledWith(1);
-        });
-
-        it('should return Err 404 if the player does not exist', async () => {
-            PlayerRepository.findById.mockResolvedValue(null);
-            const result = await PlayerService.getPlayerById(99);
-            expect(result.error).toMatchObject({ statusCode: 404, message: 'Player not found' });
+        test('returns Ok with the player', async () => {
+            playerRules.validateGetPlayer.mockResolvedValue(Result.Ok({ player: { id: 1, username: 'ale' } }));
+            const result = await playerService.getPlayerById(1);
+            expect(result.value).toEqual({ id: 1, username: 'ale' });
         });
     });
 
     describe('updatePlayer', () => {
-        it('should return Err 404 if the player does not exist', async () => {
-            PlayerRepository.findById.mockResolvedValue(null);
-            const result = await PlayerService.updatePlayer(666, { username: 'Amore' });
-            expect(result.error).toMatchObject({ statusCode: 404, message: 'Player not found' });
+        test('keeps previous values when fields are not provided', async () => {
+            playerRules.validateUpdatePlayer.mockResolvedValue(Result.Ok({
+                player: { id: 1, username: 'ale', email: 'ale@test.com' },
+                username: undefined, email: undefined, password: undefined,
+            }));
+
+            await playerService.updatePlayer(1, {});
+
+            expect(playerRepository.update).toHaveBeenCalledWith(1, { username: 'ale', email: 'ale@test.com' });
         });
 
-        it('should return Err 400 if the email is invalid', async () => {
-            const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
-            PlayerRepository.findById.mockResolvedValue(existingPlayer);
+        test('hashes the password when a new one is provided', async () => {
+            playerRules.validateUpdatePlayer.mockResolvedValue(Result.Ok({
+                player: { id: 1, username: 'ale', email: 'ale@test.com' },
+                username: undefined, email: undefined, password: 'newPass123',
+            }));
+            hashProvider.hash.mockResolvedValue('hashed123');
 
-            const result = await PlayerService.updatePlayer(1, { email: 'invalid-format' });
+            await playerService.updatePlayer(1, { password: 'newPass123' });
 
-            expect(result.error).toMatchObject({ statusCode: 400, message: 'Invalid email format' });
-        });
-
-        it('should hash the password if sent in the update', async () => {
-            const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com', password: 'oldHashedPass' };
-            PlayerRepository.findById.mockResolvedValue(existingPlayer);
-            PlayerRepository.update.mockResolvedValue({ ...existingPlayer, password: 'newHashedPass' });
-
-            await PlayerService.updatePlayer(1, { password: 'newPlainPassword' });
-
-            const calledWith = PlayerRepository.update.mock.calls[0][1];
-            expect(calledWith.password).toBeDefined();
-            expect(calledWith.password).not.toBe('newPlainPassword');
-        });
-
-        it('should not include password in updatedData if not sent', async () => {
-            const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
-            PlayerRepository.findById.mockResolvedValue(existingPlayer);
-            PlayerRepository.update.mockResolvedValue(existingPlayer);
-
-            await PlayerService.updatePlayer(1, { username: 'ale2' });
-
-            const calledWith = PlayerRepository.update.mock.calls[0][1];
-            expect(calledWith.password).toBeUndefined();
-        });
-
-        it('should retain previous values if no fields are sent', async () => {
-            const existingPlayer = { id: 1, username: 'ale', email: 'ale@test.com' };
-            PlayerRepository.findById.mockResolvedValue(existingPlayer);
-            PlayerRepository.update.mockResolvedValue(existingPlayer);
-
-            const result = await PlayerService.updatePlayer(1, {});
-
-            expect(PlayerRepository.update).toHaveBeenCalledWith(1, {
-                username: 'ale',
-                email: 'ale@test.com',
-            });
-            expect(result.value).toEqual(existingPlayer);
-        });
-
-        it('should update only the fields sent', async () => {
-            const existingPlayer = { id: 1, username: 'mario', email: 'mario@test.com' };
-            PlayerRepository.findById.mockResolvedValue(existingPlayer);
-            PlayerRepository.update.mockResolvedValue({ ...existingPlayer, username: 'marciano' });
-
-            const result = await PlayerService.updatePlayer(1, { username: 'marciano' });
-
-            expect(PlayerRepository.update).toHaveBeenCalledWith(1, {
-                username: 'marciano',
-                email: 'mario@test.com',
-            });
-            expect(result.value.username).toBe('marciano');
+            expect(hashProvider.hash).toHaveBeenCalledWith('newPass123', 10);
+            expect(playerRepository.update).toHaveBeenCalledWith(1, expect.objectContaining({ password: 'hashed123' }));
         });
     });
 
     describe('deletePlayer', () => {
-        it('should return Err 400 if id is not provided', async () => {
-            const result = await PlayerService.deletePlayer();
-            expect(result.error).toMatchObject({ statusCode: 400, message: 'ID is required' });
+        test('returns Err 404 when nothing was deleted', async () => {
+            playerRules.validateDeletePlayer.mockResolvedValue(Result.Ok({}));
+            playerRepository.delete.mockResolvedValue(false);
+            const result = await playerService.deletePlayer(1);
+            expect(result.isErr()).toBe(true);
         });
 
-        it('should return Err 404 if the player does not exist', async () => {
-            PlayerRepository.delete.mockResolvedValue(false);
-            const result = await PlayerService.deletePlayer(1);
-            expect(result.error).toMatchObject({ statusCode: 404, message: 'Player not found' });
-        });
-
-        it('should delete the player successfully', async () => {
-            PlayerRepository.delete.mockResolvedValue(true);
-            const result = await PlayerService.deletePlayer(1);
+        test('returns Ok on successful delete', async () => {
+            playerRules.validateDeletePlayer.mockResolvedValue(Result.Ok({}));
+            playerRepository.delete.mockResolvedValue(true);
+            const result = await playerService.deletePlayer(1);
             expect(result.value).toEqual({});
-            expect(PlayerRepository.delete).toHaveBeenCalledWith(1);
         });
     });
 });

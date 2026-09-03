@@ -29,6 +29,11 @@ const gamePlayerModel = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: 0,
             },
+            hasSaidUno: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
             hasLeft: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,

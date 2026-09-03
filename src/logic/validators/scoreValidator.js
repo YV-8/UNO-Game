@@ -1,42 +1,43 @@
-import Result from '../monads/result.js';
-import ScoreRepository from '../../dataAccess/repositories/score.repository.js';
-import PlayerRepository from '../../dataAccess/repositories/player.repository.js';
-import GameRepository from '../../dataAccess/repositories/game.repository.js';
+import Respond from '../monads/respond.js';
 
-export const validateIdProvided = async (data) => {
-    if (!data.id) return Result.Err({ statusCode: 400, message: 'ID is required' });
-    return Result.Ok(data);
-};
+export const scoreValidator = ({ scoreRepository, playerRepository, gameRepository }) => ({
 
-export const validateScoreExists = async (data) => {
-    const score = await ScoreRepository.findById(data.id);
-    if (!score) return Result.Err({ statusCode: 404, message: 'Score not found' });
-    return Result.Ok({ ...data, existingScore: score });
-};
+    validateIdProvided: async (data) => {
+        if (!data.id) return Respond.Err({ statusCode: 400, message: 'ID is required' });
+        return Respond.Ok(data);
+    },
 
-export const validateCreateFieldsProvided = async (data) => {
-    const { playerId, gameId, score } = data;
-    if (!playerId || !gameId || score === undefined) {
-        return Result.Err({ statusCode: 400, message: 'playerId, gameId and score are required' });
-    }
-    return Result.Ok(data);
-};
+    validateScoreExists: async (data) => {
+        const score = await scoreRepository.findById(data.id);
+        if (!score) return Respond.Err({ statusCode: 404, message: 'Score not found' });
+        return Respond.Ok({ ...data, existingScore: score });
+    },
 
-export const validateScoreIsNonNegativeNumber = async (data) => {
-    if (data.score !== undefined && (typeof data.score !== 'number' || data.score < 0)) {
-        return Result.Err({ statusCode: 400, message: 'score has to be a non-negative number' });
-    }
-    return Result.Ok(data);
-};
+    validateCreateFieldsProvided: async (data) => {
+        const { playerId, gameId, score } = data;
+        if (!playerId || !gameId || score === undefined) {
+            return Respond.Err({ statusCode: 400, message: 'playerId, gameId and score are required' });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validatePlayerExistsForScore = async (data) => {
-    const player = await PlayerRepository.findById(data.playerId);
-    if (!player) return Result.Err({ statusCode: 404, message: 'Referenced player does not exist' });
-    return Result.Ok({ ...data, player });
-};
+    validateScoreIsNonNegativeNumber: async (data) => {
+        if (data.score !== undefined && (typeof data.score !== 'number' || data.score < 0)) {
+            return Respond.Err({ statusCode: 400, message: 'score has to be a non-negative number' });
+        }
+        return Respond.Ok(data);
+    },
 
-export const validateGameExistsForScore = async (data) => {
-    const game = await GameRepository.findById(data.gameId);
-    if (!game) return Result.Err({ statusCode: 404, message: 'Referenced game does not exist' });
-    return Result.Ok({ ...data, game });
-};
+    validatePlayerExistsForScore: async (data) => {
+        const player = await playerRepository.findById(data.playerId);
+        if (!player) return Respond.Err({ statusCode: 404, message: 'Referenced player does not exist' });
+        return Respond.Ok({ ...data, player });
+    },
+
+    validateGameExistsForScore: async (data) => {
+        const game = await gameRepository.findById(data.gameId);
+        if (!game) return Respond.Err({ statusCode: 404, message: 'Referenced game does not exist' });
+        return Respond.Ok({ ...data, game });
+    },
+
+});
