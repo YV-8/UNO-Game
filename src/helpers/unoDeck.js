@@ -3,8 +3,11 @@ const NUMBERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const ACTION_VALUES = ['skip', 'reverse', 'draw_two'];
 const WILD_VALUES = ['wild', 'wild_draw_four'];
 //comodin = wild
-// 0: 1 por color (4) | 1-9: 2 por color (72) | skip/reverse/draw_two: 2 por color (24)
-// | wild/wild_draw_four: 4 de cada uno (8) = 108 cartas
+// 0: 1 por color (4)
+// 1-9: 2 por color (72)
+// skip/reverse/draw_two: 2 por color (24)
+// wild/wild_draw_four: 4 de cada uno (8) = 108 cartas
+// add wild
 //mayusculas == enums
 export const buildDeck = () => {
     const deck = [];
@@ -45,9 +48,13 @@ export const shuffleDeck = (deck) => {
     }
     return shuffled;
 };
-//INVESTIGAR
+/**copie deck with ...deck
+ * i is length of this deck  and interected from top to botton
+ * Use Math.Floor for get the nearst num without rounding
+ * this get the position j
+*/
 
-//podria hacer de otra manera con diagramas
+//podria hacer de otra manera con patron de diseno
 export const getCardPoints = (value) => {
     if (value === 'wild' || value === 'wild_draw_four') return 40;
     if (value === 'skip' || value === 'reverse' || value === 'draw_two') return 20;
@@ -69,8 +76,14 @@ const COLOR_LABELS = {
     green: 'Green',
 };
 
-
-//INVESTIGAR
+/**
+ * use valuelabels card with labels  and use the nullish coalescing
+ * search the card
+ * if this card is action to use but the card is the number  is undifined
+ * then asing the card num o thern not special to color
+ * @param {*} card
+ * @returns a card o not card
+ */
 export const formatCard = (card) => {
     if (!card) return 'No card';
     const cardValue = VALUE_LABELS[card.value] ?? card.value;

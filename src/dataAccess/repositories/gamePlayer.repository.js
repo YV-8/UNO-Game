@@ -12,10 +12,6 @@ class GamePlayerRepository {
         return await GamePlayer.findOne({ where: { gameId, playerId } });
     }
 
-    // async countByGameId(gameId) {
-    //     return await GamePlayer.count({ where: { gameId } });
-    // }
-
     async create(gamePlayerData) {
         return await GamePlayer.create(gamePlayerData);
     }

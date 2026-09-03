@@ -1,172 +1,183 @@
 import * as GameController from '../../../presentation/controllers/game.controller.js';
 import * as GameService from '../../../logic/services/game.service.js';
-import { sendSuccess } from '../../../helpers/responseHandler.middleware.js';
-import { mockRequest, mockResponse, mockNext } from '../../helpers/mockExpress.js';
+import Result from '../../../logic/monads/result.js';
+import { mockRequest, mockResponse } from '../../helpers/mockExpress.js';
 
 jest.mock('../../../logic/services/game.service.js');
-jest.mock('../../../helpers/responseHandler.middleware.js');
 
 describe('GameController', () => {
-    let req, res, next;
-
+    let res;
     beforeEach(() => {
-        req = mockRequest();
-        res = mockResponse();
-        next = mockNext();
         jest.clearAllMocks();
+        res = mockResponse();
     });
 
     describe('getAllGame', () => {
-        it('should return the games list', async () => {
-            const req = mockRequest();
-            const mockGames = [{ id: 1, name: 'Game Solitario' }, { id: 2, name: 'Game Solitario' }];
-            GameService.getAllGame.mockResolvedValue(mockGames);
-            await GameController.getAllGame(req, res, next);
-            expect(GameService.getAllGame).toHaveBeenCalledTimes(1);
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game retrieved successfully', mockGames);
-            expect(next).not.toHaveBeenCalled();
-        });
-
-        it('should call next erro() service is empty', async () => {
-            const req = mockRequest();
-            const error = new Error('No games found');
-            GameService.getAllGame.mockRejectedValue(error);
-            await GameController.getAllGame(req, res, next);
-            expect(next).toHaveBeenCalledWith(error);
+        it('should respond 200 with the game list', async () => {
+            GameService.getAllGame.mockResolvedValue(Result.Ok([{ id: 1, name: 'Uno' }]));
+            await GameController.getAllGame(mockRequest(), res);
+            expect(res.status).toHaveBeenCalledWith(200);
         });
     });
 
     describe('getGameById', () => {
-        it('debe tomar el id de req.params y responder con el juego', async () => {
-
-            const req = mockRequest({ params: { id: '5' } });
-            const mockGame = { id: 5, name: 'Partida' };
-            GameService.getGameById.mockResolvedValue(mockGame);
-
-            await GameController.getGameById(req, res, next);
-
-            expect(GameService.getGameById).toHaveBeenCalledWith('5');
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game retrieved successfully', mockGame);
-        });
-
-        it('debe llamar a next(error) si el juego no existe', async () => {
-            const req = mockRequest({ params: { id: '999' } });
-            const error = { statusCode: 404, message: 'game not found' };
-            GameService.getGameById.mockRejectedValue(error);
-
-            await GameController.getGameById(req, res, next);
-
-            expect(next).toHaveBeenCalledWith(error);
+        it('should respond 200 with the gameid', async () => {
+            GameService.getGameById.mockResolvedValue(Result.Ok([{ id: 1, name: 'Solitario' },{ id: 2, name: 'uno' }]));
+            await GameController.getGameById(mockRequest(), res);
+            expect(res.status).toHaveBeenCalledWith(200);
         });
     });
 
     describe('createGame', () => {
-        it('debe convertir access_token (snake_case) a accessToken y llamar al service', async () => {
+        it('should use req.player.id as playerId and respond 201', async () => {
+            GameService.createGame.mockResolvedValue(
+                Result.Ok({ message: 'Game created successfully', game_id: 1 })
+            );
             const req = mockRequest({
-                body: { name: 'Partida', rules: 'std', access_token: 'token123' },
+                body: { name: 'Partida', rules: 'std' },
+                player: { id: 1, username: 'moni' },
             });
-            const createdGame = { id: 1, name: 'Partida' };
-            GameService.createGame.mockResolvedValue(createdGame);
 
-            await GameController.createGame(req, res, next);
+            await GameController.createGame(req, res);
 
-            expect(GameService.createGame).toHaveBeenCalledWith({
-                name: 'Partida',
-                rules: 'std',
-                accessToken: 'token123',
-            });
-            expect(sendSuccess).toHaveBeenCalledWith(res, 201, 'Game created successfully', createdGame);
-        });
-
-        it('debe llamar a next(error) si falta el token', async () => {
-            const req = mockRequest({ body: { name: 'Partida' } });
-            const error = { statusCode: 400, message: 'access_token is required' };
-            GameService.createGame.mockRejectedValue(error);
-
-            await GameController.createGame(req, res, next);
-            expect(next).toHaveBeenCalledWith(error);
+            expect(GameService.createGame).toHaveBeenCalledWith({ name: 'Partida', rules: 'std', playerId: 1 });
+            expect(res.status).toHaveBeenCalledWith(201);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Game created successfully', game_id: 1 });
         });
     });
 
     describe('updateGame', () => {
-        it('debe separar access_token del resto del body y pasar el resto como data', async () => {
-
+        it('should use params.id, req.body and req.player.id', async () => {
+            GameService.updateGame.mockResolvedValue(
+                Result.Ok({ message: 'Game updated successfully', game_id: 1 })
+            );
             const req = mockRequest({
                 params: { id: '1' },
-                body: { name: 'Nueva', state: 'in_progress', access_token: 'token123' },
+                body: { state: 'in_progress' },
+                player: { id: 1 },
             });
-            const updatedGame = { id: 1, name: 'Nueva', state: 'in_progress' };
-            GameService.updateGame.mockResolvedValue(updatedGame);
 
-            await GameController.updateGame(req, res, next);
+            await GameController.updateGame(req, res);
 
-            expect(GameService.updateGame).toHaveBeenCalledWith(
-                '1',
-                { name: 'Nueva', state: 'in_progress' },
-                'token123'
-            );
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game updated successfully', updatedGame);
+            expect(GameService.updateGame).toHaveBeenCalledWith('1', { state: 'in_progress' }, 1);
+            expect(res.status).toHaveBeenCalledWith(200);
         });
     });
 
     describe('deleteGame', () => {
-        it('debe eliminar el juego usando el id de params', async () => {
+        it('should delete using params.id', async () => {
+            GameService.deleteGame.mockResolvedValue(Result.Ok({ message: 'Game deleted successfully' }));
             const req = mockRequest({ params: { id: '1' } });
-            GameService.deleteGame.mockResolvedValue({});
 
-            await GameController.deleteGame(req, res, next);
+            await GameController.deleteGame(req, res);
 
             expect(GameService.deleteGame).toHaveBeenCalledWith('1');
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game deleted successfully');
-        });
-    });
-
-    describe('getGameState', () => {
-        it('must read game_id from req.body and respond with direct res.json (without sendSuccess)', async () => {
-            const req = mockRequest({ body: { game_id: 1 } });
-            GameService.getGameState.mockResolvedValue({ game_id: 1, state: 'waiting' });
-
-            await GameController.getGameState(req, res, next);
-
-            expect(GameService.getGameState).toHaveBeenCalledWith(1);
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({ game_id: 1, state: 'waiting' });
-        });
-    });
-
-    describe('join', () => {
-        it('debe convertir game_id a número y separar el access_token', async () => {
-
-            const req = mockRequest({ body: { game_id: '1', access_token: 'token123' } });
-            GameService.joinGame.mockResolvedValue({});
-
-            await GameController.join(req, res, next);
-            expect(GameService.joinGame).toHaveBeenCalledWith({ gameId: 1, accessToken: 'token123' });
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'User joined the game successfully');
         });
     });
 
     describe('startGame', () => {
-        it('debe pasar game_id y access_token directo del body', async () => {
+        it('should pass game_id and req.player.id', async () => {
+            GameService.startGame.mockResolvedValue(Result.Ok({ message: 'Game started successfully' }));
+            const req = mockRequest({ body: { game_id: 1 }, player: { id: 1 } });
 
-            const req = mockRequest({ body: { game_id: 1, access_token: 'token123' } });
-            GameService.startGame.mockResolvedValue({});
+            await GameController.startGame(req, res);
 
-            await GameController.startGame(req, res, next);
-            expect(GameService.startGame).toHaveBeenCalledWith(1, 'token123');
-            expect(sendSuccess).toHaveBeenCalledWith(res, 200, 'Game started successfully');
+            expect(GameService.startGame).toHaveBeenCalledWith(1, 1);
+            expect(res.status).toHaveBeenCalledWith(200);
         });
 
-        it('debe manejar req.body undefined sin explotar', async () => {
+        it('should respond 403 if the caller is not the creator', async () => {
+            GameService.startGame.mockResolvedValue(
+                Result.Err({ statusCode: 403, message: 'Only the creator of the game can perform this action' })
+            );
+            const req = mockRequest({ body: { game_id: 1 }, player: { id: 2 } });
 
-            const req = mockRequest({ body: undefined });
-            const error = { statusCode: 400, message: 'ID is required' };
-            GameService.startGame.mockRejectedValue(error);
+            await GameController.startGame(req, res);
 
-            await GameController.startGame(req, res, next);
+            expect(res.status).toHaveBeenCalledWith(403);
+        });
+    });
 
-            expect(GameService.startGame).toHaveBeenCalledWith(undefined, undefined);
-            expect(next).toHaveBeenCalledWith(error);
+    describe('endGame', () => {
+        it('should pass game_id and req.player.id', async () => {
+            GameService.endGame.mockResolvedValue(Result.Ok({ message: 'Game ended successfully' }));
+            const req = mockRequest({ body: { game_id: 1 }, player: { id: 1 } });
+
+            await GameController.endGame(req, res);
+
+            expect(GameService.endGame).toHaveBeenCalledWith(1, 1);
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('join', () => {
+        it('should convert game_id to number and use req.player', async () => {
+            GameService.joinGame.mockResolvedValue(Result.Ok({ message: 'User joined the game successfully' }));
+            const req = mockRequest({ body: { game_id: '1' }, player: { id: 1, username: 'moni' } });
+
+            await GameController.join(req, res);
+
+            expect(GameService.joinGame).toHaveBeenCalledWith({ gameId: 1, playerId: 1, username: 'moni' });
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('leave', () => {
+        it('should convert game_id to number and use req.player.id', async () => {
+            GameService.leaveGame.mockResolvedValue(Result.Ok({ message: 'User left the game successfully' }));
+            const req = mockRequest({ body: { game_id: '1' }, player: { id: 1 } });
+
+            await GameController.leave(req, res);
+
+            expect(GameService.leaveGame).toHaveBeenCalledWith({ gameId: 1, playerId: 1 });
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('getGameState', () => {
+        it('does not require req.player, only game_id from body', async () => {
+            GameService.getGameState.mockResolvedValue(Result.Ok({ game_id: 1, state: 'waiting' }));
+            const req = mockRequest({ body: { game_id: 1 } });
+
+            await GameController.getGameState(req, res);
+
+            expect(GameService.getGameState).toHaveBeenCalledWith(1);
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('getGamePlayers', () => {
+        it('should respond 200 with the players list', async () => {
+            GameService.getGamePlayers.mockResolvedValue(Result.Ok({ game_id: 1, players: ['moni'] }));
+            const req = mockRequest({ body: { game_id: 1 } });
+
+            await GameController.getGamePlayers(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('getCurrentPlayer', () => {
+        it('should respond 200 with the current player', async () => {
+            GameService.getCurrentPlayer.mockResolvedValue(Result.Ok({ game_id: 1, current_player: 'moni' }));
+            const req = mockRequest({ body: { game_id: 1 } });
+
+            await GameController.getCurrentPlayer(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+        });
+    });
+
+    describe('getGameScores', () => {
+        it('should convert game_id to number', async () => {
+            GameService.getGameScores.mockResolvedValue(Result.Ok({ game_id: 1, scores: { moni: 50 } }));
+            const req = mockRequest({ body: { game_id: '1' } });
+
+            await GameController.getGameScores(req, res);
+
+            expect(GameService.getGameScores).toHaveBeenCalledWith(1);
+            expect(res.status).toHaveBeenCalledWith(200);
         });
     });
 });

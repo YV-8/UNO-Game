@@ -1,177 +1,136 @@
 import GameRepository from '../../dataAccess/repositories/game.repository.js';
 import GamePlayerRepository from '../../dataAccess/repositories/gamePlayer.repository.js';
-import CardRepository from '../../dataAccess/repositories/cards.repository.js';
-import { appError } from '../../middlewares/appError.js';
-import { verifyAccessToken } from '../../helpers/verifyToken.js';
+import Result from '../monads/result.js';
+import * as gameRules from '../validators/gameRules.js';
 
-const VALID_STATUSES = ['waiting', 'in_progress', 'finished'];
-const CARDS_PER_PLAYER = 7;
+// const VALID_STATUSES = ['waiting', 'in_progress', 'finished'];
+// const CARDS_PER_PLAYER = 7;
 
 export const getAllGame = async () => {
-    return await GameRepository.findAll();
+    const games = await GameRepository.findAll();
+    return Result.Ok(games);
 };
 
 export const getGameById = async (id) => {
-    if (!id) {
-        throw new appError('ID is required', 400);
-    }
+    if (!id) return Result.Err({
+        statusCode: 400, message: 'ID is required'
+    });
     const game = await GameRepository.findById(id);
-    if (!game) {
-        throw new appError('game not found', 404);
-    }
-    return game;
+    if (!game) return Result.Err({
+        statusCode: 404,
+        message: 'game not found'
+    });
+    return Result.Ok(game);
 };
 
-export const createGame = async ({ name, rules, accessToken }) => {
+export const createGame = async ({ name, rules, playerId,username }) => {
+    const result = await gameRules.validateCreateGame({ name, rules, playerId });
+    if (result.isErr()) return result;
 
-    const decoded = verifyAccessToken(accessToken);
-    const existing = await GameRepository.findByName(name);
-    if (existing) {
-        throw new appError('Name is already registered.', 400);
-    }
-    if (!name) {
-        throw new appError('name is required', 400);
-    }
-    //name, rules, state: 'waiting'
-    return await GameRepository.create({
-        name, rules, creatorId: decoded.id,
+    const game = await GameRepository.create({
+        name,
+        rules,
+        creatorId: playerId,
         state: 'waiting',
     });
+
+    await GamePlayerRepository.create({
+        gameId: game.id,
+        playerId,
+        username,
+        turnOrder: 1,
+        hasLeft: false,
+    });
+    return Result.Ok({ message: 'Game created successfully', game_id: game.id});
 };
 
-export const updateGame = async (id, data, accessToken) => {
-    verifyAccessToken(accessToken);
-    const game = await GameRepository.findById(id);
-    if (!game) {
-        throw new appError('Game not found', 404);
-    }
-    const { name, rules, state, maxPlayers } = data;
+export const updateGame = async (gameId, data, playerId) => {
+    const result = await gameRules.validateUpdateGame({ gameId, ...data, playerId });
+    if (result.isErr()) return result;
 
-    if (state !== undefined && !VALID_STATUSES.includes(state)) {
-        throw new appError(`state must be one of: ${VALID_STATUSES.join(', ')}`, 400);
-    }
-
-    const updatedData = {
+    const { game, name, rules, state } = result.value;
+    const updatedGame = await GameRepository.update(game.id, {
         name: name ?? game.name,
         rules: rules ?? game.rules,
         state: state ?? game.state,
-    };
-    return await GameRepository.update(id, updatedData);
+    });
+    return Result.Ok({ message: 'Game updated successfully', game_id: game.id});
 };
 
 export const deleteGame = async (id) => {
-    if (!id) throw new appError('ID is required', 400);
-
+    if (!id) return Result.Err({ statusCode: 400, message: 'ID is required' });
     const deleted = await GameRepository.delete(id);
-    if (!deleted) throw new appError('Game not found', 404);
-    return {};
+    if (!deleted) return Result.Err({ statusCode: 404, message: 'Game not found' });
+    return Result.Ok({message: 'Game delete successfully'});
 };
 
 export const getGameState = async (id) => {
     const numGameId = Number(id);
-    if (!numGameId) throw new appError('ID is required', 400);
+    if (!numGameId) return Result.Err({ statusCode: 400, message: 'ID is required' });
 
-    if (isNaN(numGameId)) throw new appError('Invalid ID format', 400);
     const game = await GameRepository.findById(id);
-    if (!game) throw new appError('Game not found', 404);
-
-    return { game_id: game.id, state: game.state };
+    if (!game) return Result.Err({ statusCode: 404, message: 'Game not found' });
+    return Result.Ok({ game_id: game.id, state: game.state });
 };
 
 //list gameplayers
 export const getGamePlayers = async (id) => {
     const numGameId = Number(id);
-    if (!numGameId) throw new appError('ID is required', 400);
-
+    if (!numGameId) return Result.Err({ statusCode: 400, message: 'ID is required' });
     const game = await GameRepository.findById(numGameId);
-    if (!game) throw new appError('Game not found', 404);
-
+    if (!game) return Result.Err({ statusCode: 404, message: 'Game not found' });
     const gamePlayers = await GamePlayerRepository.findAllByGameId(numGameId);
-    const players = gamePlayers.map((gamePlayer) => gamePlayer.username);
-
-    return { game_id: game.id, players };
+    return Result.Ok({ game_id: game.id, players: gamePlayers.map((gp) => gp.username) });
 };
 
 export const getCurrentPlayer = async (id) => {
     const numGameId = Number(id);
-    if (!numGameId) throw new appError('ID is required', 400);
+    if (!numGameId) return Result.Err({ statusCode: 400, message: 'ID is required' });
 
     const game = await GameRepository.findByIdWithCurrentPlayer(numGameId);
-    if (!game) throw new appError('Game not found', 404);
 
+    if (!game) return Result.Err({ statusCode: 404, message: 'Game not found' });
     if (!game.currentPlayer) {
-        throw new appError('This game does not have a current player yet', 400);
+        return Result.Err({ statusCode: 400, message: 'This game does not have a current player yet' });
     }
-
-    return { game_id: game.id, current_player: game.currentPlayer.username };
+    return Result.Ok({ game_id: game.id, current_player: game.currentPlayer.username });
 };
 
 export const getGameScores = async (id) => {
     const numGameId = Number(id);
-    if (!numGameId) throw new appError('ID is required', 400);
-
+    if (!numGameId) return Result.Err({ statusCode: 400, message: 'ID is required' });
     const game = await GameRepository.findById(numGameId);
-    if (!game) throw new appError('Game not found', 404);
 
+    if (!game) return Result.Err({ statusCode: 404, message: 'Game not found' });
     const gamePlayers = await GamePlayerRepository.findAllByGameId(numGameId);
     const scores = {};
-    gamePlayers.forEach((gamePlayer) => {
-        scores[gamePlayer.username] = gamePlayer.score;
-    });
-    //scores -> toma el usr-> puntaje add
-    return { game_id: game.id, scores };
+    gamePlayers.forEach((gp) => { scores[gp.username] = gp.score; });
+    return Result.Ok({ game_id: game.id, scores });
 };
 
-export const startGame = async (gameId, accessToken) => {
-    const numGameId = Number(gameId);
-    if (!numGameId) throw new appError('ID is required', 400);
+export const startGame = async (gameId, playerId) => {
+    const result = await gameRules.validateStartGame({ gameId, playerId });
+    if (result.isErr()) return result;
 
-    const decoded = verifyAccessToken(accessToken);
-    const game = await GameRepository.findById(numGameId);
-    if (!game) throw new appError('Game not found', 404);
-
-    if (game.creatorId !== decoded.id) {
-        throw new appError('Only the creator of the game can start it', 403);
-    }
-
-    if (game.state !== 'waiting') {
-        throw new appError('This game cannot be started from its current state', 400);
-    }
-
-    const activePlayers = await GamePlayerRepository.findAllByGameId(numGameId);
-
-    if (!activePlayers || activePlayers.length < 2) {
-        throw new appError('Minium 2 Players must have joined to start the game', 400);
-    }
-
+    const { game, activePlayers } = result.value;
     const firstPlayer = activePlayers[0];
 
-    await GameRepository.update(numGameId, {
+    await GameRepository.update(game.id, {
         state: 'in_progress',
         currentPlayerId: firstPlayer.playerId,
     });
 
-    return {};
+    return result.map(() => ({ message: 'Game started successfully' }));
 };
 
-export const endGame = async (gameId, accessToken) => {
-    const numGameId = Number(gameId);
-    if (!numGameId) { throw new appError('ID is required', 400); }
-    const decoded = verifyAccessToken(accessToken);
+export const endGame = async (gameId, playerId) => {
+    const result = await gameRules.validateEndGame({ gameId, playerId });
+    if (result.isErr()) return result;
 
-    const game = await GameRepository.findById(numGameId);
-    if (!game) { throw new appError('Game not found', 404); }
+    const { game } = result.value;
+    await GameRepository.update(game.id, { state: 'finished' });
 
-    if (game.creatorId !== decoded.id) {
-        throw new appError('Only the creator of the game can end it', 403);
-    }
-
-    if (game.state !== 'in_progress') {
-        throw new appError('This game is not in progress', 400);
-    }
-
-    await GameRepository.update(numGameId, { state: 'finished' });
-    return {};
+    return result.map(() => ({ message: 'Game ended successfully' }));
 };
 
 /**Join Game user
@@ -179,40 +138,28 @@ export const endGame = async (gameId, accessToken) => {
 * then verificate has gameid and playerid for user stay in this game
 *now initialice in waiting and activecount  depends the maxPlayers
 */
-export const joinGame = async ({ gameId, accessToken }) => {
-    const numGameId = Number(gameId);
-    if (!numGameId) { throw new appError('game_id is required', 400); }
-    const decoded = verifyAccessToken(accessToken);
-    const game = await GameRepository.findById(numGameId);
+//usar el middleware en decoded
+export const joinGame = async ({ gameId, playerId, username }) => {
+    const result = await gameRules.validateJoinGame({ gameId, playerId });
+    if (result.isErr()) return result;
 
-    if (!game) throw new appError('Game not found', 404);
-    if (game.state === 'finished') {
-        throw new appError('The game has already finished', 400);
+    const { game, existingPlayer } = result.value;
+
+    if (existingPlayer && existingPlayer.hasLeft) {
+        await GamePlayerRepository.update(existingPlayer.id, { hasLeft: false });
+        return result.map(() => ({ message: 'User rejoined the game successfully' }));
     }
 
-    const existing = await GamePlayerRepository.findByGameAndPlayer(numGameId, decoded.id);
-
-    if (existing && !existing.hasLeft) {
-        throw new appError('User stays in this game', 400);
-    }
-    if (existing && existing.hasLeft) {
-        await GamePlayerRepository.update(existing.id, { hasLeft: false });
-        return {};
-    }
-    if (game.state !== 'waiting') {
-        throw new appError('The game started, only players who already joined can rejoin', 400);
-    }
-
-    const activeCount = await GamePlayerRepository.countActiveByGameId(numGameId);
-
+    const activeCount = await GamePlayerRepository.countActiveByGameId(game.id);
     await GamePlayerRepository.create({
-        gameId: numGameId,
-        playerId: decoded.id,
-        username: decoded.username,
+        gameId: game.id,
+        playerId,
+        username,
         turnOrder: activeCount + 1,
         hasLeft: false,
     });
-    return {};
+
+    return result.map(() => ({ message: 'User joined the game successfully' }));
 };
 
 /**
@@ -221,18 +168,13 @@ export const joinGame = async ({ gameId, accessToken }) => {
  *Depends the gameplayer.hasleft the player is not active
  * @returns we use update to change hasleft from true to false
  */
-export const leaveGame = async ({ gameId, accessToken }) => {
-    const numGameId = Number(gameId);
-    if (!numGameId) { throw new appError('game_id is required', 400); }
-    const decoded = verifyAccessToken(accessToken);
-    const game = await GameRepository.findById(numGameId);
-    
-    if (!game) throw new appError('Game not found', 404);
-    const gamePlayer = await GamePlayerRepository.findByGameAndPlayer(numGameId, decoded.id);
-    if (!gamePlayer || gamePlayer.hasLeft) {
-        throw new appError('User is not an active player in this game', 400);
-    }
+export const leaveGame = async ({ gameId, playerId }) => {
+    const result = await gameRules.validateLeaveGame({ gameId, playerId });
+    if (result.isErr()) return result;
+
+    const { gamePlayer } = result.value;
     await GamePlayerRepository.update(gamePlayer.id, { hasLeft: true });
-    return {};
+
+    return result.map(() => ({ message: 'User left the game successfully' }));
 };
 

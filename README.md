@@ -30,6 +30,7 @@ The project follows a layered architecture (Data Access / Logic / Presentation):
 
 ```
 capstone-uno/
+├── coverage/
 ├── node_modules/
 ├── src/
 │   ├── dataAccess/
@@ -48,17 +49,29 @@ capstone-uno/
 │   │   │   └── score.repository.js
 │   │   └── database.js
 │   ├── helpers/
-│   │   ├── responseHandle.middleware.js
-│   │   ├── tokenBlacklist.js
-│   │   ├── unoDeck.js
-│   │   └── responseHandler.middleware.js
+│   │   ├── composeAsyncValidators.js
+│   │   ├── handleResult.js
+│   │   └── unoDeck.js
 │   ├── logic/
-│   │   └── services/
-│   │       ├── auth.service.js
-│   │       ├── cards.service.js
-│   │       ├── game.service.js
-│   │       ├── player.service.js
-│   │       └── score.service.js
+│   │   ├── monads/
+│   │   │   └── result.js
+│   │   ├── services/
+│   │   │   ├── auth.service.js
+│   │   │   ├── cards.service.js
+│   │   │   ├── game.service.js
+│   │   │   ├── player.service.js
+│   │   │   └── score.service.js
+│   │   └── validators/
+│   │       ├── authRules.js
+│   │       ├── authValidator.js
+│   │       ├── cardsRules.js
+│   │       ├── cardValidator.js
+│   │       ├── gameRules.js
+│   │       ├── gameValidator.js
+│   │       ├── playerRules.js
+│   │       ├── playerValidator.js
+│   │       ├── scoreRules.js
+│   │       └── scoreValidator.js
 │   ├── middlewares/
 │   │   ├── appError.js
 │   │   ├── auth.middleware.js
@@ -80,7 +93,9 @@ capstone-uno/
 ├── package.json
 ├── README.md
 └── server.js
+
 ```
+
 - **dataAccess:** Sequelize models and repositories (data access layer).
 - **logic/services:** business logic.
 - **presentation:** controllers and routes (HTTP layer).
@@ -179,13 +194,11 @@ Go to the following address in your browser or HTTP client:
 ```
 http://localhost:3000/api
 ```
-
-###  Postman collection
-
-To test all the endpoints, import the Postman collection:
-
-1. Download the collection file: [https://drive.google.com/file/d/1RirRrmNWYDLWZgogkSZHpwcN2vrQdTax/view?usp=sharing]
+# Postman collection
+1. Download the collection file: [https://drive.google.com/drive/folders/1UjeMDE55NhjNVnOP0tAGAKIAeFnU9GBA?usp=sharing]
 2. Open Postman → **Export** → paste the link or select the downloaded file.
+
+
 ###  Available endpoints
 
 **Players**
@@ -205,6 +218,10 @@ To test all the endpoints, import the Postman collection:
 | POST | `/api/games` |
 | PUT | `/api/games` |
 | DELETE | `/api/games` |
+| POSTSTATE | `/api/games/state` |
+| POSTPLAERS | `/api/games/players` |
+| POSTCurrent-Players | `/api/games/current-players` |
+
 
 **Cards**
 | Method | Endpoint |
@@ -214,6 +231,7 @@ To test all the endpoints, import the Postman collection:
 | POST | `/api/cards` |
 | PUT | `/api/cards/:id` |
 | DELETE | `/api/cards/:id` |
+| GET | `/api/games/top-card` |
 
 **Scores**
 | Method | Endpoint |
@@ -224,7 +242,14 @@ To test all the endpoints, import the Postman collection:
 | PUT | `/api/scores/:id` |
 | DELETE | `/api/scores/:id` |
 
----
+### Important Details about the poryect
 
-<p align="center"> Made with 💛 for the Capstone UNO project</p>
+* **Note on the Card Deck:** The deck is not generated when a game is created (`POST /api/games`). The first discard card is created lazily the first time `GET .../top-card` is requested: if `getTopCard` finds no card in `discard` for that `gameId`, `createInitCard` generates one on the fly with a random color and value (0–9). `helpers/unoDeck.js` already includes `buildDeck` (the full 108-card deck: numbers, `skip`/`reverse`/`draw_two`, wilds) and `shuffleDeck` (Fisher-Yates), intended for a future iteration where the full deck is generated and dealt automatically when the game is created, instead of creating cards one at a time.
+
+* **Security & Authentication:** To create a game and perform authentication, an `access_token` is strictly required. This ensures enhanced game security, protects players' data, and provides better access management across all operations.
+---
+## Coverage
+![alt text](image.png)
+
+<p align="center"> Made with love, saliva, sweat, duct tape and lots of saliva for the Capstone UNO project.</p>
 ---

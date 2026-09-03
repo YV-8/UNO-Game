@@ -1,205 +1,127 @@
-import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
-import * as AuthService from '../../../logic/services/auth.service.js';
-import { verifyAccessToken } from '../../../helpers/verifyToken.js';
-import { addToBlacklist } from '../../../helpers/tokenBlacklist.js';
-import { appError } from '../../../middlewares/appError.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import PlayerRepository from '../../../dataAccess/repositories/player.repository.js';
+import { addToBlacklist } from '../../../middlewares/tokenBlacklist.js';
+import * as AuthService from '../../../logic/services/auth.service.js';
 
-jest.mock('../../../helpers/verifyToken.js');
-jest.mock('../../../helpers/tokenBlacklist.js');
 jest.mock('../../../dataAccess/repositories/player.repository.js');
+jest.mock('../../../middlewares/tokenBlacklist.js');
 
-describe('PlayerService', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
+describe('AuthService', () => {
+    beforeEach(() => jest.clearAllMocks());
 
-    describe('Register Auth -> createPlayer', () => {
-
-        it('should throw error 400 missing fields', async () => {
-            await expect(
-                AuthService.register({ username: '', email: 'moni@test.com', password: '123' })
-            ).rejects.toMatchObject({
+    describe('register', () => {
+        it('should return Err 400 if a required field is missing', async () => {
+            const result = await AuthService.register({ username: '', email: 'moni@test.com', password: '123' });
+            expect(result.error).toMatchObject({
                 statusCode: 400,
-                message: 'username, email and password are required'
+                message: 'username, email and password are required',
             });
         });
 
-        it('should throw error 400 invalid email', async () => {
-            PlayerRepository.findByUsername.mockResolvedValue(null);
-            await expect(
-                AuthService.register({ username: 'moni', email: 'ssjfs-843', password: '123' })
-            ).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'Invalid email format'
+        it('should return Err 400 if the username already exists', async () => {
+            PlayerRepository.findByUsername.mockResolvedValue({ id: 1, username: 'Moni' });
+            const result = await AuthService.register({
+                username: 'Moni', email: 'moni@test.com', password: 'pass123',
             });
-
+            expect(result.error).toMatchObject({ statusCode: 400, message: 'User already exists' });
             expect(PlayerRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw error 400 if email alredy exist', async () => {
-            PlayerRepository.findByEmail.mockResolvedValue({
-                id: 5, email: 'moni@test.com'});
-
-            await expect(
-                AuthService.register({
-                    username: 'Moni', email: 'moni@test.com', password: 'pass123'
-                })
-            ).rejects.toMatchObject({
-                statusCode: 400, message: 'Email address is already registered.'
-            });//cambiar a 409 por reglas de error
+        it('should return Err 400 if the email format is invalid', async () => {
+            PlayerRepository.findByUsername.mockResolvedValue(null);
+            const result = await AuthService.register({
+                username: 'moni', email: 'ssjfs-843', password: '123',
+            });
+            expect(result.error).toMatchObject({ statusCode: 400, message: 'Invalid email format' });
         });
 
-        it('should throw error 400 already exist user', async () => {
-            PlayerRepository.findByUsername.mockResolvedValue({
-                username:'Moni'});
+        it('should return Err 400 if the email already exists', async () => {
+            PlayerRepository.findByUsername.mockResolvedValue(null);
+            PlayerRepository.findByEmail.mockResolvedValue({ id: 5, email: 'moni@test.com' });
 
-            await expect(
-                AuthService.register({
-                    username: 'Moni', email: 'moni@test.com', password: 'pass123'
-                })
-            ).rejects.toMatchObject({
-                statusCode: 400, message: 'User already exists'
+            const result = await AuthService.register({
+                username: 'Moni', email: 'moni@test.com', password: 'pass123',
+            });
+            expect(result.error).toMatchObject({
+                statusCode: 400,
+                message: 'Email address is already registered.',
             });
         });
 
-        it('should throw the player is valid', async () => {
+        it('should return Ok with a success message if everything is valid', async () => {
             PlayerRepository.findByUsername.mockResolvedValue(null);
             PlayerRepository.findByEmail.mockResolvedValue(null);
-            PlayerRepository.create.mockResolvedValue({
-                id: 1,
-                username: 'Marce', email: 'marce@test.com'
+            PlayerRepository.create.mockResolvedValue({ id: 1, username: 'Marce', email: 'marce@test.com' });
+
+            const result = await AuthService.register({
+                username: 'Marce', email: 'marce@test.com', password: 'pass123',
             });
 
-            await AuthService.register({
-                username: 'Marce',
-                email: 'marce@test.com', password: 'pass123'
-            });
-            expect(PlayerRepository.create).toHaveBeenCalledWith(expect.objectContaining({
-                username: 'Marce', email: 'marce@test.com', password: expect.any(String)
-                //expect.any(String) para el password hasheado
-            }));
+            expect(result.isOk()).toBe(true);
+            expect(result.value).toEqual({ message: 'User registered successfully' });
+            expect(PlayerRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({ username: 'Marce', email: 'marce@test.com', password: expect.any(String) })
+            );
         });
-
     });
 
-    describe('Login Auth -> loginPlayer', () => {
-        it('should throw error 400 miss a field need', async () => {
-            await expect(
-                AuthService.login({ username: '', password: '123' })
-            ).rejects.toMatchObject({
+    describe('login', () => {
+        it('should return Err 400 if a required field is missing', async () => {
+            const result = await AuthService.login({ username: '', password: '123' });
+            expect(result.error).toMatchObject({
                 statusCode: 400,
-                message: 'username and password are required'
+                message: 'username and password are required',
             });
         });
 
-        it('should throw error 401 the user doesnt exist', async () => {
+        it('should return Err 401 if the user does not exist', async () => {
             PlayerRepository.findByUsername.mockResolvedValue(null);
-            await expect(
-                AuthService.login({ username: 'nonexistent', password: '123' })
-            ).rejects.toMatchObject({
-                statusCode: 401,
-                message: 'Invalid credentials'
-            });
+            const result = await AuthService.login({ username: 'nonexistent', password: '123' });
+            expect(result.error).toMatchObject({ statusCode: 401, message: 'Invalid credentials' });
         });
 
-        it('should throw error 401 incorrect password', async () => {
-            const mockPlayer = { id: 1, username: 'moni', password: '12334pass' };
-            PlayerRepository.findByUsername.mockResolvedValue(mockPlayer);
-
-            await expect(
-                AuthService.login({ username: 'moni', password: 'pass123' })
-            ).rejects.toMatchObject({
-                statusCode: 401,
-                message: 'Invalid credentials'
-            });
+        it('should return Err 401 if the password is incorrect', async () => {
+            PlayerRepository.findByUsername.mockResolvedValue({ id: 1, username: 'moni', password: '12334pass' });
+            const result = await AuthService.login({ username: 'moni', password: 'pass123' });
+            expect(result.error).toMatchObject({ statusCode: 401, message: 'Invalid credentials' });
         });
 
-        it('should throw a token the credentials are corrects', async () => {
-            const mockPlayer = { id: 1, username: 'moni', password: await bcrypt.hash('pass123', 10) };
-            PlayerRepository.findByUsername.mockResolvedValue(mockPlayer);
+        it('should return Ok with only an access_token if credentials are correct', async () => {
+            const hashedPassword = await bcrypt.hash('pass123', 10);
+            PlayerRepository.findByUsername.mockResolvedValue({ id: 1, username: 'moni', password: hashedPassword });
 
             const result = await AuthService.login({ username: 'moni', password: 'pass123' });
 
-            expect(result).toHaveProperty('access_token');
-            expect(typeof result.access_token).toBe('string');
+            expect(result.isOk()).toBe(true);
+            expect(Object.keys(result.value)).toEqual(['access_token']);
+            expect(typeof result.value.access_token).toBe('string');
         });
     });
 
-    describe('getProfile Auth -> getProfile', () => {
-        it('should throw error 401 ivalid token ' , async () => {
-            verifyAccessToken.mockImplementation(() => {
-                throw new appError('Invalid token', 401);
-            });
-            await expect(
-                AuthService.getProfile('invalidToken')
-            ).rejects.toMatchObject({
-                statusCode: 401,
-                message: 'Invalid token'
-            });
-        });
-
-        it('should throw error 404 not exist player', async () => {
-            const validToken = 'valid.jwt.token';
-            verifyAccessToken.mockReturnValue({ id: 666, username: 'amore' });
+    describe('getProfile', () => {
+        it('should return Err 404 if the player does not exist', async () => {
             PlayerRepository.findById.mockResolvedValue(null);
-
-            await expect(
-                AuthService.getProfile(validToken)
-            ).rejects.toMatchObject({
-                statusCode: 404,
-                message: 'Player not found'
-            });
+            const result = await AuthService.getProfile(666);
+            expect(result.error).toMatchObject({ statusCode: 404, message: 'Player not found' });
         });
 
-        it('should throw the profile the user is valid', async () => {
-            const validToken = 'valid.jwt.token';
+        it('should return Ok with the profile if the player exists', async () => {
             const mockPlayer = { id: 666, username: 'amore', email: 'amore@test.com' };
-            verifyAccessToken.mockReturnValue({ id: 666, username: 'amore' });
             PlayerRepository.findById.mockResolvedValue(mockPlayer);
 
-            const result = await AuthService.getProfile(validToken);
+            const result = await AuthService.getProfile(666);
 
-            expect(result).toEqual({
-                username: 'amore',
-                email: 'amore@test.com',
-            });
+            expect(result.value).toEqual({ username: 'amore', email: 'amore@test.com' });
         });
     });
-    describe('Logout', () => {
-        it('should throw error 400 miss token', async () => {
-            verifyAccessToken.mockImplementation(() => {
-                throw new appError('access_token is required', 400);
-            });
 
-            await expect(AuthService.logout()).rejects.toMatchObject({
-                statusCode: 400,
-                message: 'access_token is required',
-            });
-        });
+    describe('logout', () => {
+        it('should add the token to the blacklist and return Ok', async () => {
+            const result = await AuthService.logout('valid.jwt.token');
 
-        it('should throw error 401 ivalid token', async () => {
-
-            verifyAccessToken.mockImplementation(() => {
-                throw new appError('Invalid token', 401);
-            });
-
-            await expect(AuthService.logout('badToken')).rejects.toMatchObject({
-                statusCode: 401,
-                message: 'Invalid token',
-            });
-            expect(addToBlacklist).not.toHaveBeenCalled();
-        });
-
-        it('should throw delete player', async () => {
-            const validToken = 'valid.jwt.token';
-            verifyAccessToken.mockReturnValue({ id: 1, username: 'moni' });
-
-            const result = await AuthService.logout(validToken);
-
-            expect(addToBlacklist).toHaveBeenCalledWith(validToken);
-            expect(result).toEqual({});
+            expect(addToBlacklist).toHaveBeenCalledWith('valid.jwt.token');
+            expect(result.isOk()).toBe(true);
+            expect(result.value).toEqual({ message: 'User logged out successfully' });
         });
     });
 });
