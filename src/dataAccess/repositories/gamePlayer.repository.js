@@ -3,7 +3,7 @@ import { GamePlayer } from '../models/index.js';
 class GamePlayerRepository {
     async findAllByGameId(gameId) {
         return await GamePlayer.findAll({
-            where: { gameId,hasLeft: false },
+            where: { gameId, hasLeft: false },
             order: [['turnOrder', 'ASC']],
         });
     }
