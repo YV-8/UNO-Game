@@ -8,11 +8,11 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 const PORT = 3000;
 
+
 import { setupSocketHandler } from './presentation/sockets/gameSocketHandler.js';
-import { socketEmitter } from './utils/socketEmitter.js';
 
 // Setup socket logic
-socketEmitter.setIo(io);
+app.set('io', io); // Makes 'io' accessible in controllers via req.app.get('io')
 setupSocketHandler(io);
 
 const startServer = async () => {
