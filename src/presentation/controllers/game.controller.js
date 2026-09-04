@@ -136,6 +136,14 @@ export const getMyHand = async (req, res) => {
   return handleResult(res, result, 200);
 };
 
+export const getSuggestedCard = async (req, res) => {
+  const result = await gameService.getSuggestedCard({
+    gameId: req.params.id,
+    playerId: req.player.id
+  });
+  return handleResult(res, result, 200);
+};
+
 export const drawCard = async (req, res) => {
   // const gameId = req.params.id;
   // const playerId = req.player.id;

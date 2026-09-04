@@ -294,6 +294,26 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
         });
     };
 
+    const getSuggestedCard = async ({ gameId, playerId }) => {
+        const validation = await gameRules.validateSuggestCard({ gameId, playerId });
+        if (validation.isErr()) return validation;
+
+        const { game } = validation.value;
+
+        const [hand, topDiscard] = await Promise.all([
+            cardRepository.findHandByGameAndPlayer(game.id, playerId),
+            cardRepository.findTopDiscardByGameId(game.id)
+        ]);
+
+        const suggestedCard = hand.find(card => unoGameRules.canPlayCard(card, topDiscard));
+
+        if (suggestedCard) {
+            return respond.Ok({ suggestion: unoDeck.formatCard(suggestedCard) });
+        } else {
+            return respond.Ok({ suggestion: null, message: "No playable cards found, draw a card." });
+        }
+    };
+
     const getPlayerHand = async ({ gameId, playerId }) => {
         const validation = await gameRules.validateGetPlayerHand({ gameId, playerId });
         if (validation.isErr()) return validation;
@@ -423,6 +443,6 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
 
     return {
         getAllGame, getGameById, createGame, updateGame, deleteGame, getGameState, getGamePlayers, getCurrentPlayer,
-        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getPlayerHand, drawCard, getGameOverview, getGameRegistry, sayUno, challengeUno, getScores
+        startGame, endGame, joinGame, leaveGame, getTopCard, playCard, getSuggestedCard, getPlayerHand, drawCard, getGameOverview, getGameRegistry, sayUno, challengeUno, getScores
     };
 };

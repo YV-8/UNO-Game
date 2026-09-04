@@ -18,6 +18,7 @@ const GameBoardPage = ({ onNavigateToMenu }) => {
 
     const [winnerMessage, setWinnerMessage] = useState('');
     const [finalScores, setFinalScores] = useState(null);
+    const [suggestedCard, setSuggestedCard] = useState(null);
 
     const fetchGameState = useCallback(async () => {
         if (!activeGameId) return;
@@ -58,6 +59,19 @@ const GameBoardPage = ({ onNavigateToMenu }) => {
                 .catch(err => console.error("Failed to fetch scores:", err));
         }
     }, [gameState?.state, activeGameId, finalScores, session?.token]);
+
+    const { currentPlayer, topCard, hands, state: gameStatus } = gameState || {};
+    const isMyTurn = currentPlayer === session?.player?.username;
+
+    useEffect(() => {
+        if (isMyTurn && activeGameId && gameStatus === 'in_progress') {
+            apiClient.get(`/games/${activeGameId}/suggest`, session?.token)
+                .then(res => setSuggestedCard(res.suggestion))
+                .catch(err => console.error("Failed to fetch suggestion:", err));
+        } else {
+            setSuggestedCard(null);
+        }
+    }, [isMyTurn, activeGameId, gameStatus, session?.token]);
 
     const handleLeave = async () => {
         try {
@@ -149,8 +163,6 @@ const GameBoardPage = ({ onNavigateToMenu }) => {
         return <div className="game-board__loading">Loading game board...</div>;
     }
 
-    const { currentPlayer, topCard, hands, state: gameStatus } = gameState;
-    const isMyTurn = currentPlayer === session?.player?.username;
     const myHand = hands[session?.player?.username] || [];
 
     // Opponents are everyone in hands that isn't me
@@ -234,6 +246,11 @@ const GameBoardPage = ({ onNavigateToMenu }) => {
                 >
                     ¡UNO!
                 </button>
+                {suggestedCard && (
+                    <div className="game-board__suggestion" style={{ marginTop: '1rem', color: 'var(--color-pastelYellow)', fontWeight: 'bold' }}>
+                        suggestion : {suggestedCard}
+                    </div>
+                )}
                 <div className="player-hand">
                     {Array.isArray(myHand) && myHand.map((card, idx) => (
                         <UnoCard

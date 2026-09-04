@@ -43,6 +43,11 @@ export const gameRules = (gameValidator) => ({
         gameValidator.validateGameExists,
         gameValidator.validateActivePlayer
     ),
+    validateSuggestCard: composeAsyncValidators(
+        gameValidator.validateGameExists,
+        gameValidator.validateGameNotFinished,
+        gameValidator.validateActivePlayer
+    ),
     validatePlayCard: composeAsyncValidators(
         gameValidator.validateGameExists,
         gameValidator.validateGameNotFinished,

@@ -28,6 +28,7 @@ router.post('/start', gameController.startGame);
 router.post('/end', gameController.endGame);
 router.put('/:id/play', gameController.playCard);
 router.get('/:id/hand', gameController.getMyHand);
+router.get('/:id/suggest', gameController.getSuggestedCard);
 router.put('/:id/draw', gameController.drawCard);
 router.get('/:id/state', gameController.getGameOverview);
 router.get('/:id/history', gameController.getGameRegistry);
