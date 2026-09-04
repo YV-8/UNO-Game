@@ -28,7 +28,7 @@ const GameByIdPanel = () => {
             <div className="panel__edge panel__edge--green" />
             <h2 className="panel__title">Game by ID</h2>
             <p className="panel__hint">
-                GET /api/games/:id — also sets this as the active game for the sidebar score.
+                GET /api/games/:id — also sets this as the active game.
             </p>
 
             <form className="panel__form" onSubmit={handleSubmit}>
