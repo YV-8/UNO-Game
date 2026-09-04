@@ -3,23 +3,21 @@ import * as gameController from '../controllers/game.controller.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { memoizationMiddleware } from '../../middlewares/memoizationMiddleware.js';
 
-const liveGameCache = memoizationMiddleware({ max: 100, maxAge: 5000 });
 const gameListCache = memoizationMiddleware({ max: 30, maxAge: 30000 });
 
 
 const router = Router();
 router.use(authenticate);
 
-router.get('/',gameListCache, gameController.getAllGame);
-router.get('/:id',gameListCache, gameController.getGameById);
-router.delete('/:id',gameController.deleteGame);
+router.get('/', gameListCache, gameController.getAllGame);
+router.get('/:id', gameListCache, gameController.getGameById);
+router.delete('/:id', gameController.deleteGame);
 
 router.post('/', gameController.createGame);
 router.put('/:id', gameController.updateGame);
 
 router.post('/state', gameController.getGameState);
 router.post('/players', gameController.getGamePlayers);
-router.get('/:id/players', gameController.getPlayersByGameId);
 router.post('/current-player', gameController.getCurrentPlayer);
 router.post('/:id/scores', gameController.getGameScore);
 router.post('/top-card', gameController.getTopCard);

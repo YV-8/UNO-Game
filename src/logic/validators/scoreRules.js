@@ -1,4 +1,3 @@
-
 import { composeAsyncValidators } from '../../helpers/composeAsyncValidators.js';
 
 export const scoreRules = (scoreValidator) => ({

@@ -1,5 +1,6 @@
 import { gameService } from '../../container.js';
 import { handleResult } from '../../helpers/handleResult.js';
+import { emitGameStateUpdated } from '../sockets/gameSocketEmitter.js';
 
 export const getAllGame = async (req, res) => {
   const result = await gameService.getAllGame();
@@ -39,6 +40,9 @@ export const deleteGame = async (req, res) => {
 export const startGame = async (req, res) => {
   const { game_id } = req.body || {};
   const result = await gameService.startGame(game_id, req.player.id);
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), game_id);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -52,6 +56,9 @@ export const join = async (req, res) => {
   const gameId = Number(req.body?.game_id);
   const { id: playerId, username } = req.player;
   const result = await gameService.joinGame({ gameId, playerId, username });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), gameId);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -59,6 +66,9 @@ export const leave = async (req, res) => {
   const gameId = Number(req.body?.game_id);
   const result = await gameService.leaveGame(
     { gameId, playerId: req.player.id });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), gameId);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -112,6 +122,9 @@ export const playCard = async (req, res) => {
         chosenColor: req.body.chosenColor,
         bodyUsername: req.body.player,
     });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), req.params.id);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -133,6 +146,9 @@ export const drawCard = async (req, res) => {
         playerId: req.player.id,
         bodyUsername: req.body.player,
     });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), req.params.id);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -164,6 +180,9 @@ export const sayUno = async (req, res) => {
         playerId: req.player.id,
         bodyUsername: req.body.player,
     });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), req.params.id);
+  }
   return handleResult(res, result, 200);
 };
 
@@ -178,5 +197,8 @@ export const challengeUno = async (req, res) => {
         challengedUsername: req.body.challengedPlayer,
         bodyUsername: req.body.challenger,
     });
+  if (result.isOk()) {
+      emitGameStateUpdated(req.app.get('io'), req.params.id);
+  }
   return handleResult(res, result, 200);
 };

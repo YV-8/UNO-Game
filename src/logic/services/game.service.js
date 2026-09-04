@@ -1,4 +1,3 @@
-import { socketEmitter } from '../../utils/socketEmitter.js';
 const VALID_COLORS = ['red', 'blue', 'yellow', 'green'];
 export const gameService = ({ gameRepository, cardRepository, registryRepository, gameRules, gamePlayerRepository, scoreRepository, unoCardBuilder, unoDeck, unoGameRules, parseCardString, gameOverviewBuilder, turnResolver, turnRegistryBuilder, respond }) => {
     const getAllGame = async () => {
@@ -249,7 +248,6 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
             details: { card: unoDeck.formatCard(targetCard), chosenColor: validColor },
         });
 
-        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({
             message: remainingCards === 0
@@ -289,7 +287,6 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
             details: { card: unoDeck.formatCard(drawnCard) },
         });
 
-        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({
             message: `${activePlayers[currentIndex].username} drew a card from the deck.`,
@@ -372,7 +369,6 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
 
         await registryRepository.create({ gameId: game.id, playerId, move: 'say_uno' });
 
-        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({ message: `${gamePlayer.username} said UNO successfully.` });
     };
@@ -395,7 +391,6 @@ export const gameService = ({ gameRepository, cardRepository, registryRepository
 
         const currentPlayerRow = await gamePlayerRepository.findByGameAndPlayer(game.id, game.currentPlayerId);
 
-        socketEmitter.emitToGame(game.id, 'gameStateUpdated');
 
         return respond.Ok({
             message: `Challenge successful. ${challengedPlayer.username} forgot to say UNO and draws 2 cards.`,
