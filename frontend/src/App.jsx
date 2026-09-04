@@ -5,7 +5,7 @@ import LoginPage from './pages/loginPage.jsx';
 import RegisterPage from './pages/registerPage.jsx';
 import MenuPage from './pages/menuPage.jsx';
 import GameDashboardPage from './pages/gameDashboardPage.jsx';
-import PlayerDashboardPage from './pages/playerDashboardPage.jsx';
+import ScoreDashboardPage from './pages/scoreDashboardPage.jsx';
 import ProfileDashboardPage from './pages/profileDashboardPage.jsx';
 import LobbyDashboardPage from './pages/lobbyDashboardPage.jsx';
 import GameBoardPage from './pages/gameBoardPage.jsx';
@@ -21,7 +21,7 @@ const AuthGate = () => {
         switch (currentView) {
             case 'game': return <GameDashboardPage onNavigateToMenu={() => setCurrentView('menu')} onNavigateToLobby={() => setCurrentView('lobby')} />;
             case 'board': return <GameBoardPage onNavigateToMenu={() => setCurrentView('menu')} />;
-            case 'player': return <PlayerDashboardPage onNavigateToMenu={() => setCurrentView('menu')} />;
+            case 'player': return <ScoreDashboardPage onNavigateToMenu={() => setCurrentView('menu')} />;
             case 'profile': return <ProfileDashboardPage onNavigateToMenu={() => setCurrentView('menu')} />;
             case 'lobby': return <LobbyDashboardPage onNavigateToMenu={() => setCurrentView('menu')} onNavigateToGame={() => setCurrentView('board')} />;
             case 'menu':

@@ -14,7 +14,7 @@ const MenuPage = ({ onNavigate }) => {
                         Log out
                     </button>
                 </div>
-                
+
                 <div className="menu-grid">
                     <button
                         className="menu-button menu-button--pink"
@@ -26,7 +26,7 @@ const MenuPage = ({ onNavigate }) => {
                         className="menu-button menu-button--cream"
                         onClick={() => onNavigate('player')}
                     >
-                        Player
+                        Score
                     </button>
                     <button
                         className="menu-button menu-button--green"

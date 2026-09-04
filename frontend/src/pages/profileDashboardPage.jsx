@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/authContext.jsx';
 import TopNav from '../components/layout/topNav.jsx';
-import Sidebar from '../components/layout/sidebar.jsx';
 import apiClient from '../api/client.js';
 
 const NAV_ITEMS = [
@@ -11,7 +10,7 @@ const NAV_ITEMS = [
 const ProfileDashboardPage = ({ onNavigateToMenu }) => {
     const { session, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('profile');
-    
+
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
@@ -63,7 +62,7 @@ const ProfileDashboardPage = ({ onNavigateToMenu }) => {
 
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
                             <div style={{
-                                width: '100px', height: '100px', borderRadius: '50%', 
+                                width: '100px', height: '100px', borderRadius: '50%',
                                 background: 'var(--color-blue)', color: 'white',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '3rem', fontFamily: 'var(--font-display)', fontWeight: 'bold',
@@ -84,7 +83,7 @@ const ProfileDashboardPage = ({ onNavigateToMenu }) => {
                                     required
                                 />
                             </label>
-                            
+
                             <label className="auth-card__field">
                                 <span className="auth-card__label">Email</span>
                                 <input
@@ -98,10 +97,10 @@ const ProfileDashboardPage = ({ onNavigateToMenu }) => {
 
                             {error && <div className="panel__error-box">{error}</div>}
                             {success && (
-                                <div className="panel__error-box" style={{ 
-                                    background: 'rgba(0, 255, 0, 0.1)', 
-                                    borderColor: 'var(--color-green)', 
-                                    color: 'var(--color-green-dark)' 
+                                <div className="panel__error-box" style={{
+                                    background: 'rgba(0, 183, 255, 0.22)',
+                                    borderColor: 'var(--color-green)',
+                                    color: 'var(--color-green-dark)'
                                 }}>
                                     {success}
                                 </div>
@@ -113,7 +112,6 @@ const ProfileDashboardPage = ({ onNavigateToMenu }) => {
                         </form>
                     </div>
                 </main>
-                <Sidebar />
             </div>
         </div>
     );

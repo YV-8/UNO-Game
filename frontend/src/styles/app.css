@@ -49,7 +49,7 @@ button {
     background-color: var(--color-semiDarkPurple);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color:var(--color-soft);
+    color: var(--color-soft);
     border: 2px solid var(--color-darkPurple);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
@@ -198,8 +198,8 @@ button {
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
-    color: var(--color-ink);
-    background: var(--color-cream);
+    color: var(--color-soft);
+    background: var(--color-darkPink);
 }
 
 .topnav__button--active {
@@ -215,59 +215,6 @@ button {
     font-size: 0.8rem;
     cursor: pointer;
     text-decoration: underline;
-}
-
-/*Sidebar */
-
-.sidebar {
-    position: relative;
-    width: 200px;
-    flex-shrink: 0;
-    padding: var(--space-4);
-    background: var(--color-darkPurple);
-    border-left: 8px var(--color-ligthpink);
-    border-top-left-radius: 30px;
-    border-bottom-left-radius: 30px;
-    order: 2;
-}
-
-
-.sidebar__section-title {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    font-size: 1.2rem;
-    letter-spacing: 0.3em;
-    color: var(--color-lightpink);
-    margin: var(--space-3) 0 var(--space-1);
-}
-
-.sidebar__username {
-    font-family: var(--font-display);
-    font-weight: 700;
-    color: var(--color-cream);
-    font-size: 2rem;
-    margin: 0;
-}
-
-.sidebar__empty,
-.sidebar__error {
-    font-size: 0.85rem;
-    opacity: 0.85;
-    margin: 0;
-}
-
-.sidebar__error {
-    color: var(--color-lightred);
-}
-
-.sidebar__score-value {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    background: var(--color-lightPurple);
-    padding: var(--space-2);
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 0;
 }
 
 /* Panels */
@@ -336,7 +283,7 @@ button {
     border: none;
     border-radius: 8px;
     background: var(--color-pink);
-    color:var(--color-cream);
+    color: var(--color-cream);
     font-family: var(--font-display);
     font-weight: 700;
     cursor: pointer;
@@ -370,12 +317,6 @@ button {
 @media (max-width: 860px) {
     .app-shell__body {
         flex-direction: column;
-    }
-    .sidebar {
-        width: auto;
-        order: 0;
-        border-left: none;
-        border-bottom: 2px solid rgb(209, 186, 255);
     }
 }
 
@@ -432,34 +373,28 @@ button {
     box-shadow: 0 16px 35px rgba(0, 0, 0, 0.4);
 }
 
-.menu-button--pink { background: var(--color-pink); }
-.menu-button--cream { background: var(--color-cream); }
-.menu-button--skyblue { background: var(--color-mediumSkyblue); }
-.menu-button--green { background: var(--color-pastelGreen); }
-.menu-button--lightpurple { background: var(--color-lightPurple); }
-.menu-button--soft { background: var(--color-soft); }
+.menu-button--pink {
+    background: var(--color-pink);
+}
 
-/* Sidebar Dropdown */
-.sidebar__dropdown {
-    position: relative;
-    cursor: pointer;
-    user-select: none;
+.menu-button--cream {
+    background: var(--color-cream);
 }
-.sidebar__dropdown-menu {
-    margin-top: var(--space-2);
-    background: var(--color-soft);
-    border-radius: 8px;
-    padding: var(--space-2) 0;
-    list-style: none;
+
+.menu-button--skyblue {
+    background: var(--color-mediumSkyblue);
 }
-.sidebar__dropdown-item {
-    padding: 8px var(--space-3);
-    color: var(--color-dark);
-    font-size: 0.9rem;
-    cursor: pointer;
+
+.menu-button--green {
+    background: var(--color-pastelGreen);
 }
-.sidebar__dropdown-item:hover {
+
+.menu-button--lightpurple {
     background: var(--color-lightPurple);
+}
+
+.menu-button--soft {
+    background: var(--color-soft);
 }
 
 /* Game Cards */
@@ -469,16 +404,19 @@ button {
     gap: var(--space-3);
     margin-top: var(--space-3);
 }
+
 .game-card {
     background: var(--color-cream-real);
     color: var(--color-dark);
     border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
+
 .game-card--skyblue {
     background: var(--color-cream-real);
 }
+
 .game-card__title {
     margin: 0;
     padding: var(--space-3) var(--space-3) var(--space-2);
@@ -487,24 +425,89 @@ button {
     color: var(--color-darkPurple);
     font-weight: bold;
 }
+
 .game-card__table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
-.game-card__table th, .game-card__table td {
+
+.game-card__table th,
+.game-card__table td {
     text-align: left;
     padding: 6px var(--space-3);
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
 .game-card__table tr:last-child th,
 .game-card__table tr:last-child td {
     border-bottom: none;
 }
+
 .game-card__table th {
     font-weight: 600;
     color: var(--color-dark);
     width: 30%;
+}
+
+/* Modificador para centrar el contenido en pantallas como el Perfil */
+.app-shell__content--centered {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: var(--space-4);
+}
+
+/* Modificador para hacer la tarjeta de Auth un poco más ancha */
+.auth-card--profile {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* Avatar del usuario */
+.profile-avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--color-skyBlue);
+    /* Reemplazado --color-blue por uno que sí tienes */
+    color: var(--color-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    border: 4px solid var(--color-soft);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Botón y bordes alternativos (Azul) */
+.auth-card__edge--blue {
+    background-color: var(--color-skyBlue);
+}
+
+.auth-card__submit--blue {
+    background-color: var(--color-skyBlue);
+}
+
+/* Caja de éxito*/
+.panel__success-box {
+    background: var(--color-pastelGreenGlass);
+    border: 1px solid var(--color-pastelGreen);
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: var(--space-3);
+    color: var(--color-pastelGreen);
+    /* Adaptado a tu paleta pastel */
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
 .panel__error-box {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/authContext.jsx';
 import { useGame } from '../context/gameContext.jsx';
 import apiClient from '../api/client.js';
+import { io } from 'socket.io-client';
 
 const LobbyDashboardPage = ({ onNavigateToMenu, onNavigateToGame }) => {
     const { session } = useAuth();
@@ -36,13 +37,23 @@ const LobbyDashboardPage = ({ onNavigateToMenu, onNavigateToGame }) => {
     }, [activeGameId, session]);
 
     useEffect(() => {
-        let interval;
+        let socket;
         if (activeGameId) {
             fetchLobbyData();
-            interval = setInterval(fetchLobbyData, 3000);
+            
+            socket = io('http://localhost:3000');
+            socket.on('connect', () => {
+                socket.emit('joinGame', activeGameId);
+            });
+            socket.on('gameStateUpdated', () => {
+                fetchLobbyData();
+            });
         }
         return () => {
-            if (interval) clearInterval(interval);
+            if (socket) {
+                socket.emit('leaveGame', activeGameId);
+                socket.disconnect();
+            }
         };
     }, [activeGameId, fetchLobbyData]);
 

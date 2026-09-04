@@ -124,7 +124,7 @@ const GameBoardPage = ({ onNavigateToMenu }) => {
 
         const isMyTurn = gameState?.currentPlayer === session?.player?.username;
         if (!isMyTurn) {
-            setTurnMessage("it isn't not your turn");
+            setTurnMessage("It is not your turn!");
             setTimeout(() => setTurnMessage(''), 3000);
             return;
         }
