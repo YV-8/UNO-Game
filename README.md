@@ -194,6 +194,19 @@ Go to the following address in your browser or HTTP client:
 ```
 http://localhost:3000/api
 ```
+
+**8. Start the Frontend Application**
+
+The project includes a React frontend built with Vite.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173` (or the port specified by Vite).
+
 # Postman collection
 1. Download the collection file: [https://drive.google.com/drive/folders/1UjeMDE55NhjNVnOP0tAGAKIAeFnU9GBA?usp=sharing]
 2. Open Postman → **Export** → paste the link or select the downloaded file.
@@ -221,6 +234,7 @@ http://localhost:3000/api
 | POSTSTATE | `/api/games/state` |
 | POSTPLAERS | `/api/games/players` |
 | POSTCurrent-Players | `/api/games/current-players` |
+| GET | `/api/games/:id/suggest` |
 
 
 **Cards**
@@ -247,6 +261,42 @@ http://localhost:3000/api
 * **Note on the Card Deck:** The deck is not generated when a game is created (`POST /api/games`). The first discard card is created lazily the first time `GET .../top-card` is requested: if `getTopCard` finds no card in `discard` for that `gameId`, `createInitCard` generates one on the fly with a random color and value (0–9). `helpers/unoDeck.js` already includes `buildDeck` (the full 108-card deck: numbers, `skip`/`reverse`/`draw_two`, wilds) and `shuffleDeck` (Fisher-Yates), intended for a future iteration where the full deck is generated and dealt automatically when the game is created, instead of creating cards one at a time.
 
 * **Security & Authentication:** To create a game and perform authentication, an `access_token` is strictly required. This ensures enhanced game security, protects players' data, and provides better access management across all operations.
+
+### 🎮 How the UI Functions
+
+The UNO Capstone frontend is built with **React** and uses **Vite** for fast development.
+
+#### 1. Getting Started in the Console
+To run the frontend, open a new terminal (console) and navigate to the frontend directory. Install the dependencies and start the development server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Once it's running, open your browser and go to `http://localhost:5173`.
+
+#### 2. Authentication Flow (Login & Register)
+When you first open the app, you will be greeted by the **Login** screen.
+- **Login**: Enter your registered `username` and `password` to access your account.
+- **Register**: If you are a new player, click on "Don't have an account?" to go to the Registration screen. Fill in your `username`, `email`, and `password` to create a new profile.
+Once successfully logged in, an `access_token` is generated and saved in your session, granting you secure access to the game.
+
+#### 3. The Main Menu (4 Buttons)
+After logging in, you will arrive at the Main Menu, which features 4 main colorful buttons:
+- **Game (Pink Button)**: Takes you to the Game Dashboard. Here you can create a new game, view existing games, update game rules, or delete games.
+- **Score (Cream Button)**: Takes you to the Score Dashboard. It displays a leaderboard showing all players and their total accumulated points from winning games.
+- **Join the Game (Green Button)**: Takes you to the Lobby. Here you can see active games waiting for players, join a game, start a game (if you are the creator), and ultimately enter the Game Board.
+- **Profile (Light Purple Button)**: Takes you to your Profile Dashboard, where you can view and update your account details like your username and email.
+
+#### 4. How the UNO Game Works
+Once a game is started from the Lobby, you enter the **Game Board**:
+- **Real-Time Gameplay**: The UI connects to the backend using **Socket.IO**. When opponents play cards, draw, or call UNO, the board updates automatically without needing to refresh the page.
+- **Taking Your Turn**: When it is your turn, you can click a playable card from your hand that matches the color or value of the top card on the discard pile. If you have no playable cards, you must click the deck to **Draw** a card.
+- **Wild Cards**: If you play a wild card (like a color change or +4), a modal will pop up asking you to choose the new active color.
+- **Saying UNO & Challenges**: When you are about to play your second-to-last card leaving you with exactly one card, you MUST click the **"¡UNO!"** button. If you forget, opponents can click the **"¡Desafiar UNO!"** (Challenge) button next to your name to penalize you with 2 extra cards.
+- **Card Suggestions (New Feature)**: To help you play, a new "Suggest" feature runs in the background. During your turn, the app automatically checks your hand against the game rules and displays a glowing `suggestion : {cardname}` label directly above your cards with a valid move.
+- **Winning**: The game ends when a player plays their last card. They earn points based on the cards remaining in their opponents' hands, and a Victory/Game Over screen is displayed.
+
 ---
 ## Coverage
 ![alt text](image.png)
